@@ -28,11 +28,8 @@ int main(int /*argc*/, char** /*argv*/){
 	if(ws_result != 0){
 		return ws_result;
 	}
-
-	SDL_Renderer* WH_SDL_Renderer = SDL_GetRenderer(WindowHandler.SDL_Window_ptr);
-	assert(WH_SDL_Renderer != nullptr); //"SDL_Renderer is Invalid."
 	
-	gui::Init(WH_SDL_Renderer);
+	gui::Init(WindowHandler.SDL_Renderer_ptr);
 	
     // Main loop
     bool done = false;

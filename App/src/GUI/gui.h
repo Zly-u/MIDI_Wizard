@@ -20,15 +20,22 @@ namespace res {
 	// std::map<std::string, TextureData> tex = {
 	// 	{"place_holder", TextureData()}
 	// };
+	
 }
 
 namespace gui
 {
+	static SDL_Texture* tex_placeholder = nullptr;
 	static SDL_Texture* viewport_tex = nullptr;
 	
 	void Init(struct SDL_Renderer* renderer);
 	void DrawUI();
 	void Render();
 	void Cleanup();
+
+	/// UI ELEMENTS ///
+	
+	void UI_ShowMenu_File();
+	
 };
 

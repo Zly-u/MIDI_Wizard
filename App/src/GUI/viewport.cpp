@@ -5,7 +5,9 @@
 #include "SDL_render.h"
 
 
-viewport::viewport(::SDL_Renderer* renderer) /*: main_renderer(renderer)*/{
+viewport::viewport(::SDL_Renderer* renderer)
+	: main_renderer(renderer)
+{
 	viewport_tex_ptr = SDL_CreateTexture(
 		main_renderer,
 		SDL_PIXELFORMAT_BGRA8888,
@@ -37,7 +39,5 @@ void viewport::Draw() {
 }
 
 void viewport::Delete() {
-	if(viewport_tex_ptr) {
-		SDL_DestroyTexture(viewport_tex_ptr);
-	}
+	viewport::~viewport();
 }

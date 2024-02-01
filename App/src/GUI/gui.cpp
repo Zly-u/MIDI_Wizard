@@ -1,5 +1,6 @@
 #include "gui.h"
 
+#include <memory>
 #include <SDL_render.h>
 
 #include "imgui.h"
@@ -17,53 +18,29 @@ namespace gui {
 	bool show_another_window	= false;
 	ImVec4 clear_color			= ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-	viewport midi_viewport;
+	std::unique_ptr<viewport> midi_viewport;
 	
-	void Init(::SDL_Renderer* renderer) {
-		midi_viewport = viewport(renderer);
+	void Init(SDL_Renderer* renderer) {
+		midi_viewport = std::make_unique<viewport>(renderer);
 
-		ImGui::StyleColorsDark();
+		// ImGui::StyleColorsDark();
 		// ImGui::StyleColorsLight();
 		
 		// Load some texture into our viewport render target
-		// SDL_Surface* surf = IMG_Load("res/place_holder.png");
-		// SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+		// SDL_Surface* surf = IMG_Load("E:/JetBrains_Rider/Projects_CPP/MIDI_Wizard/App/res/place_holder.png");
+		// tex_placeholder = SDL_CreateTextureFromSurface(renderer, surf);
 		// SDL_FreeSurface(surf);
 
 		// constexpr SDL_Rect rect{0, 0, 100, 100,};
 		// SDL_RenderCopy(renderer, tex, nullptr, &rect);
 	}
 
-	void UI_ShowMenu_File()
-	{
-	    if (ImGui::MenuItem("New")) {}
-		
-	    if (ImGui::MenuItem("Open", "Ctrl+O")) {}
-		
-	    if (ImGui::BeginMenu("Open Recent"))
-	    {
-	        ImGui::MenuItem("test1.mid");
-	        ImGui::MenuItem("test2.mid");
-	        ImGui::MenuItem("test3.mid");
-	        ImGui::MenuItem("..."); // TODO: Can replace with some scroll box?
-
-	    	ImGui::EndMenu(); // Open Recent
-	    }
-			
-	    if (ImGui::MenuItem("Save", "Ctrl+S")) {}
-			
-	    if (ImGui::MenuItem("Save As..", "Ctrl+Shift+S")) {}
-		
-	    ImGui::Separator();
-		
-	    if (ImGui::MenuItem("Quit", "Alt+F4")) {}
-	}
 	
 	void DrawUI()
 	{
-		// if (show_demo_window) {
-		// 	ImGui::ShowDemoWindow(&show_demo_window);
-		// }
+		if (show_demo_window) {
+			ImGui::ShowDemoWindow(&show_demo_window);
+		}
 		if (ImGui::BeginMainMenuBar())
 		{
 			if (ImGui::BeginMenu("File"))
@@ -152,14 +129,12 @@ namespace gui {
 		}
 		*/
 		
-		midi_viewport.Draw();
+		midi_viewport->Draw();
 		
 		// MIDI UI
 		bool MIDI_UI_OPEN = true;
 		bool MIDI_UI_CHANNELS_OPEN = true;
-		constexpr ImGuiWindowFlags MIDI_UI_FLAGS =
-			ImGuiWindowFlags_MenuBar |
-			ImGuiWindowFlags_HorizontalScrollbar;
+		constexpr ImGuiWindowFlags MIDI_UI_FLAGS = ImGuiWindowFlags_None;
 		if(ImGui::Begin("MIDI Viewport", &MIDI_UI_OPEN, MIDI_UI_FLAGS))
 		{
 			// if(ImGui::BeginMenuBar())
@@ -185,12 +160,18 @@ namespace gui {
 			// } 
 		
 			//TODO: Viewport renderer
-			
+
 			ImGui::Image(
-				midi_viewport.viewport_tex_ptr,
-				ImVec2(1280.0/2.0, 720.0/2.0)
-				// ImGui::GetCurrentWindow()->Size
+				midi_viewport->viewport_tex_ptr,
+				// tex_placeholder,
+				// ImVec2(1280.0/2.0, 720.0/2.0)
+				ImVec2(
+					ImGui::GetCurrentWindow()->Size.x - ImGui::GetCurrentWindow()->WindowPadding.x,
+					ImGui::GetCurrentWindow()->Size.y - ImGui::GetCurrentWindow()->WindowPadding.y - ImGui::GetCurrentWindow()->TitleBarHeight() - ImGui::GetCurrentWindow()->TitleBarHeight() 
+				)
 			);
+
+			
 			
 			
 		} /* END Window MIDI Viewport */ ImGui::End();
@@ -218,5 +199,32 @@ namespace gui {
 		ImGui_ImplSDLRenderer2_Shutdown();
 		ImGui_ImplSDL2_Shutdown();
 		ImGui::DestroyContext();
+	}
+
+	/// UI ELEMENTS ///
+	
+	void UI_ShowMenu_File()
+	{
+		if (ImGui::MenuItem("New")) {}
+		
+		if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+		
+		if (ImGui::BeginMenu("Open Recent"))
+		{
+			ImGui::MenuItem("test1.mid");
+			ImGui::MenuItem("test2.mid");
+			ImGui::MenuItem("test3.mid");
+			ImGui::MenuItem("..."); // TODO: Can replace with some scroll box?
+
+			ImGui::EndMenu(); // Open Recent
+		}
+			
+		if (ImGui::MenuItem("Save", "Ctrl+S")) {}
+			
+		if (ImGui::MenuItem("Save As..", "Ctrl+Shift+S")) {}
+		
+		ImGui::Separator();
+		
+		if (ImGui::MenuItem("Quit", "Alt+F4")) {}
 	}
 }
