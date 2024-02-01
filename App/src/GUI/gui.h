@@ -1,12 +1,13 @@
 #pragma once
 
 #include <map>
-#include <SDL_render.h>
 #include <string>
 
 #include "imgui.h"
 
-class window_handler;
+class  window_handler;
+struct SDL_Texture;
+struct SDL_Renderer;
 
 // struct TextureData {
 // 	SDL_Surface* tex = nullptr;
@@ -26,9 +27,12 @@ namespace res {
 namespace gui
 {
 	static SDL_Texture* tex_placeholder = nullptr;
-	static SDL_Texture* viewport_tex = nullptr;
+	static SDL_Texture* viewport_tex	= nullptr;
+
+	///
 	
-	void Init(struct SDL_Renderer* renderer);
+	void Init(SDL_Renderer* renderer);
+	void SetupDocking();
 	void DrawUI();
 	void Render();
 	void Cleanup();
@@ -36,6 +40,9 @@ namespace gui
 	/// UI ELEMENTS ///
 	
 	void UI_ShowMenu_File();
-	
+
+	/// UI HELPERS ///
+
+	void HelpMarker(const char* desc);
 };
 

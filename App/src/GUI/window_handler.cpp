@@ -4,10 +4,9 @@
 #include <cstdlib>         // abort
 
 #include "imgui_internal.h"
+#include "SDL_image.h"
 
 
-
-	
 struct WindowSettings
 {
 	const char* Title = "MIDI Wizard";
@@ -44,6 +43,12 @@ int window_handler::WindowSetup(){
 		printf("SDL Init Error: %s\n", SDL_GetError());
 		return -1;
 	}
+	constexpr Uint32 SDL_IMAGE_INIT_FLAGS =
+		IMG_INIT_PNG |
+		IMG_INIT_JPG;
+	if (IMG_Init(SDL_IMAGE_INIT_FLAGS) != 0) {
+		printf("SDL Init Error: %s\n", SDL_GetError());
+	};
 
 	// From 2.0.18: Enable native IME.
 	#ifdef SDL_HINT_IME_SHOW_UI

@@ -11,7 +11,7 @@ public:
 	viewport() = default;
 	explicit viewport(::SDL_Renderer* renderer);
 	~viewport();
-
+	
 	void Draw();
 	void Delete();
 };

@@ -5,7 +5,7 @@
 #include "SDL_render.h"
 
 
-viewport::viewport(::SDL_Renderer* renderer)
+viewport::viewport(SDL_Renderer* renderer)
 	: main_renderer(renderer)
 {
 	viewport_tex_ptr = SDL_CreateTexture(
