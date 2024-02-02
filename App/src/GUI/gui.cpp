@@ -25,14 +25,6 @@ namespace gui {
 
 		// ImGui::StyleColorsDark();
 		// ImGui::StyleColorsLight();
-		
-		// Load some texture into our viewport render target
-		// SDL_Surface* surf = IMG_Load("E:/JetBrains_Rider/Projects_CPP/MIDI_Wizard/App/res/place_holder.png");
-		// tex_placeholder = SDL_CreateTextureFromSurface(renderer, surf);
-		// SDL_FreeSurface(surf);
-
-		// constexpr SDL_Rect rect{0, 0, 100, 100,};
-		// SDL_RenderCopy(renderer, tex, nullptr, &rect);
 	}
 
 
@@ -146,6 +138,9 @@ namespace gui {
 
 	void DrawUI()
 	{
+		midi_viewport->Draw();
+
+		
 		if (show_demo_window) {
 			ImGui::ShowDemoWindow(&show_demo_window);
 		}
@@ -197,14 +192,15 @@ namespace gui {
 			ImGui::EndMainMenuBar();
 		}
 		
-		midi_viewport->Draw();
-		
 		// MIDI UI
 		bool MIDI_UI_OPEN = true;
 		bool MIDI_UI_CHANNELS_OPEN = true;
 		constexpr ImGuiWindowFlags MIDI_UI_FLAGS = ImGuiWindowFlags_None;
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+		//TODO: Fix minimizing crashing the program
+		if(MIDI_UI_OPEN) {
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+		}
 		if(ImGui::Begin("MIDI Viewport", &MIDI_UI_OPEN, MIDI_UI_FLAGS))
 		{
 			ImGui::PopStyleVar();
@@ -217,10 +213,6 @@ namespace gui {
 					ImGui::GetCurrentWindow()->Size.y - ImGui::GetCurrentWindow()->TitleBarHeight()
 				)
 			);
-
-			
-			
-			
 		} /* END Window MIDI Viewport */ ImGui::End();
 		
 		if(ImGui::Begin("MIDI Channels", &MIDI_UI_CHANNELS_OPEN, MIDI_UI_FLAGS)) {
@@ -242,7 +234,7 @@ namespace gui {
 	}
 
 	void Cleanup() {
-		// midi_viewport.Delete();
+		midi_viewport = nullptr;
 		ImGui_ImplSDLRenderer2_Shutdown();
 		ImGui_ImplSDL2_Shutdown();
 		ImGui::DestroyContext();

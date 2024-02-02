@@ -48,7 +48,7 @@ int window_handler::WindowSetup(){
 		IMG_INIT_JPG;
 	if (IMG_Init(SDL_IMAGE_INIT_FLAGS) != 0) {
 		printf("SDL Init Error: %s\n", SDL_GetError());
-	};
+	}
 
 	// From 2.0.18: Enable native IME.
 	#ifdef SDL_HINT_IME_SHOW_UI
@@ -76,7 +76,8 @@ int window_handler::WindowSetup(){
 		return -1;
 	}
 
-	SDL_Renderer_ptr = SDL_CreateRenderer(SDL_Window_ptr, -1, 0);
+	constexpr Uint32 MAIN_RENDERER_FLAGS = SDL_RENDERER_ACCELERATED;
+	SDL_Renderer_ptr = SDL_CreateRenderer(SDL_Window_ptr, -1, MAIN_RENDERER_FLAGS);
 	if(!SDL_Renderer_ptr) {
 		Cleanup();
 		printf("Error: SDL_CreateRenderer(): %s\n", SDL_GetError());
