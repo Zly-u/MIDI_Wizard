@@ -6,18 +6,16 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
-#include "imgui_internal.h" 
-#include "SDL_image.h"
 #include "viewport.h"
 
 
 
 namespace gui {
 	// Our state
-	bool show_demo_window		= true;
-	bool show_another_window	= false;
-	ImVec4 clear_color			= ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
+	bool   show_demo_window    = true;
+	bool   show_another_window = false;
+	ImVec4 clear_color         = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+	
 	std::unique_ptr<viewport> midi_viewport;
 	
 	void Init(SDL_Renderer* renderer) {
@@ -33,7 +31,11 @@ namespace gui {
 		static bool opt_fullscreen	= true;
 		static bool opt_padding		= false; // Removes padding for all the child windows
 		
-		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+		ImGuiDockNodeFlags dockspace_flags =
+			// ImGuiDockNodeFlags_HiddenTabBar |
+			// ImGuiDockNodeFlags_NoTabBar |
+			ImGuiDockNodeFlags_AutoHideTabBar;
+		
 		// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
 		// because it would be confusing to have two docking targets within each others.
 		ImGuiWindowFlags docking_window_flags =
@@ -138,7 +140,10 @@ namespace gui {
 
 	void DrawUI()
 	{
+		// Made pre and post for ease of coding graphics
+		midi_viewport->PreDraw();
 		midi_viewport->Draw();
+		midi_viewport->PostDraw();
 
 		
 		if (show_demo_window) {
@@ -192,33 +197,18 @@ namespace gui {
 			ImGui::EndMainMenuBar();
 		}
 		
-		// MIDI UI
-		bool MIDI_UI_OPEN = true;
-		bool MIDI_UI_CHANNELS_OPEN = true;
-		constexpr ImGuiWindowFlags MIDI_UI_FLAGS = ImGuiWindowFlags_None;
+		///////////////////////////////////////
 
-		//TODO: Fix minimizing crashing the program
-		if(MIDI_UI_OPEN) {
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-		}
-		if(ImGui::Begin("MIDI Viewport", &MIDI_UI_OPEN, MIDI_UI_FLAGS))
-		{
-			ImGui::PopStyleVar();
-			//TODO: Viewport renderer
-			
-			ImGui::Image(
-				midi_viewport->viewport_tex_ptr,
-				ImVec2(
-					ImGui::GetCurrentWindow()->Size.x,
-					ImGui::GetCurrentWindow()->Size.y - ImGui::GetCurrentWindow()->TitleBarHeight()
-				)
-			);
-		} /* END Window MIDI Viewport */ ImGui::End();
+		static bool MIDI_UI_CHANNELS_OPEN = true;
+		constexpr ImGuiWindowFlags MIDI_UI_FLAGS = ImGuiWindowFlags_None;
+		midi_viewport->DrawUI();
+
+		///////////////////////////////////////
 		
 		if(ImGui::Begin("MIDI Channels", &MIDI_UI_CHANNELS_OPEN, MIDI_UI_FLAGS)) {
 			
 			
-		} /* END : MIDI Channels */ ImGui::End();
+		} ImGui::End(); /* MIDI Channels */ 
 	}
 
 	void Render()
@@ -235,6 +225,7 @@ namespace gui {
 
 	void Cleanup() {
 		midi_viewport = nullptr;
+		
 		ImGui_ImplSDLRenderer2_Shutdown();
 		ImGui_ImplSDL2_Shutdown();
 		ImGui::DestroyContext();

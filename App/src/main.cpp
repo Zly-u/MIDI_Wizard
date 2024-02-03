@@ -1,27 +1,12 @@
-// Dear ImGui: standalone example application for SDL2 + Vulkan
+#include <cstdio>
 
-// Learn about Dear ImGui:
-// - FAQ                  https://dearimgui.com/faq
-// - Getting Started      https://dearimgui.com/getting-started
-// - Documentation        https://dearimgui.com/docs (same as your local docs/ folder).
-// - Introduction, links and more at the top of imgui.cpp
-
-// Important note to the reader who wish to integrate imgui_impl_vulkan.cpp/.h in their own engine/app.
-// - Common ImGui_ImplVulkan_XXX functions and structures are used to interface with imgui_impl_vulkan.cpp/.h.
-//   You will use those if you want to use this rendering backend in your engine/app.
-// - Helper ImGui_ImplVulkanH_XXX functions and structures are only used by this example (main.cpp) and by
-//   the backend itself (imgui_impl_vulkan.cpp), but should PROBABLY NOT be used by your own engine/app code.
-// Read comments in imgui_impl_vulkan.h.
-
-
-
-
+#include "core.h"
 #include "window_handler.h"
 #include "gui.h"
+#include "midi.h"
 
 
 int main(int /*argc*/, char** /*argv*/){
-	printf("Program start\n");
 	// Window Singleton
 	window_handler WindowHandler;
 	const int ws_result = WindowHandler.WindowSetup();
@@ -30,6 +15,11 @@ int main(int /*argc*/, char** /*argv*/){
 	}
 	
 	gui::Init(WindowHandler.SDL_Renderer_ptr);
+
+	constexpr ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+	char test_mid[] = "res/test_type1_MultiTrack.mid";
+	MIDI::Read(test_mid);
 	
     // Main loop
     bool done = false;
@@ -53,8 +43,8 @@ int main(int /*argc*/, char** /*argv*/){
         	
         	if (event.type == SDL_WINDOWEVENT &&
         		event.window.event == SDL_WINDOWEVENT_CLOSE &&
-        		event.window.windowID == SDL_GetWindowID(WindowHandler.SDL_Window_ptr))
-        	{
+        		event.window.windowID == SDL_GetWindowID(WindowHandler.SDL_Window_ptr)
+        	){
         		done = true;
         	}
         }
@@ -69,7 +59,6 @@ int main(int /*argc*/, char** /*argv*/){
     	gui::Render();
 
     	// End frame
-    	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     	SDL_RenderSetScale(
     		WindowHandler.SDL_Renderer_ptr,
     		WindowHandler.ImIO_ptr->DisplayFramebufferScale.x,
@@ -89,6 +78,8 @@ int main(int /*argc*/, char** /*argv*/){
     	SDL_RenderPresent(WindowHandler.SDL_Renderer_ptr);
     }
 
+	printf("\nCLEANING UP\n\n");
+	
 	gui::Cleanup();
 	WindowHandler.Cleanup();
 	

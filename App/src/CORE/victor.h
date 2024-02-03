@@ -134,13 +134,14 @@ namespace zly {
             return (m_ptr_storageEnd - m_ptr_start) / sizeof(ValueType);
         }
 
+    	// TODO: wrong way of decrementing the pointer, not actually decrementing the right thing?
         ValueType pop(){
-            if(m_size == 0) { return; }
+            if(m_size == 0) { return ValueType(); }
 
             ValueType temp = *m_ptr_end;
             delete m_ptr_end;
 
-            m_ptr_end--;
+            --m_ptr_end;
             m_size--;
 
             return temp;
@@ -152,7 +153,6 @@ namespace zly {
 //            std::cout << __PRETTY_FUNCTION__ << std::endl;
             assert(m_ptr_start != nullptr);
             assert(m_ptr_storageEnd != nullptr);
-            assert(index >= 0);
 
 
             // For when we go OOB of the available space
@@ -161,7 +161,7 @@ namespace zly {
 
 //                printf("[realloc]\tindex: %d | ReAllocating: %d | prev Full Size: %d | ", index, elementsToAllocate, full_size());
 
-                m_ptr_start      = (PointerType) realloc(m_ptr_start, sizeof(ValueType) * elementsToAllocate);
+                m_ptr_start      = static_cast<PointerType>(realloc(m_ptr_start, sizeof(ValueType) * elementsToAllocate));
                 m_ptr_end        = m_ptr_start + (index + 1);
                 m_ptr_storageEnd = m_ptr_start + sizeof(ValueType) * elementsToAllocate + 1;
                 recalcSize();

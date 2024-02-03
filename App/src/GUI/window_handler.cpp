@@ -34,20 +34,20 @@ window_handler::window_handler() :
 
 
 int window_handler::WindowSetup(){
-	// Setup SDL
 	constexpr Uint32 SDL_INIT_FLAGS =
 		SDL_INIT_VIDEO |
 		SDL_INIT_TIMER |
 		SDL_INIT_EVENTS;
-	if (SDL_Init(SDL_INIT_FLAGS) != 0) {
+	if (SDL_Init(SDL_INIT_FLAGS) != 0) { // 0 - success
 		printf("SDL Init Error: %s\n", SDL_GetError());
 		return -1;
 	}
 	constexpr Uint32 SDL_IMAGE_INIT_FLAGS =
 		IMG_INIT_PNG |
 		IMG_INIT_JPG;
-	if (IMG_Init(SDL_IMAGE_INIT_FLAGS) != 0) {
+	if (IMG_Init(SDL_IMAGE_INIT_FLAGS) == 0) { // 0 - fail
 		printf("SDL Init Error: %s\n", SDL_GetError());
+		return -1;
 	}
 
 	// From 2.0.18: Enable native IME.
@@ -63,8 +63,8 @@ int window_handler::WindowSetup(){
 	);
 	SDL_DisplayMode DesktopDisplayMode;
 	SDL_GetDesktopDisplayMode(0, &DesktopDisplayMode);
-	const int desktop_width = DesktopDisplayMode.w * 0.9;
-	const int desktop_height = DesktopDisplayMode.h * 0.9;
+	const int desktop_width  = DesktopDisplayMode.w * 0.7;
+	const int desktop_height = DesktopDisplayMode.h * 0.7;
 	SDL_Window_ptr = SDL_CreateWindow(
 		"MIDI Wizard",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -87,7 +87,7 @@ int window_handler::WindowSetup(){
 	// Setup ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImIO_ptr = &ImGui::GetIO(); (void)ImIO_ptr;
+	ImIO_ptr = &ImGui::GetIO();
 	ImIO_ptr->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	ImIO_ptr->ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
 	ImIO_ptr->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows

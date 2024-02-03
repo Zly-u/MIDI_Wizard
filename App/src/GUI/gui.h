@@ -1,10 +1,5 @@
 #pragma once
 
-#include <map>
-#include <string>
-
-#include "imgui.h"
-
 class  window_handler;
 struct SDL_Texture;
 struct SDL_Renderer;

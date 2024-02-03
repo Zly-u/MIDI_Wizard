@@ -1,10 +1,10 @@
 #include "core.h"
-#include <stdio.h>
+#include <cstdio>
+
+//////////////////////////////////////////////////////////////////////////////////
 
 namespace core {
-
-	void testCore() {
-		printf("testCore\n");
+	void Init() {
+		printf("Core Init\n");
 	}
-
 }
