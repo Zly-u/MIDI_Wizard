@@ -7,26 +7,40 @@
 
 
 struct Note {
-	uint64_t delta = 0;
-	uint8_t  tone  = 0;
-	uint8_t  vel   = 0;
+	uint64_t time = 0;
+	uint8_t  tone = 0;
+	uint8_t  vel  = 0;
 };
 
 
 struct MetaEvent {
-	uint8_t type;
+	uint8_t     type;
 	std::string name;
+
+	uint64_t	time = 0;
+
+	uint64_t	value1 = 0;
+	uint64_t	value2 = 0;
+	uint64_t	value3 = 0;
+	uint64_t	value4 = 0;
+	uint64_t	value5 = 0;
 	
 	std::string text;
 };
 
 struct Event {
-	uint8_t type;
+	uint8_t     type;
 	std::string name;
+
+	uint64_t	time = 0;
+
+	uint64_t	value1 = 0;
+	uint64_t	value2 = 0;
+	uint64_t	value3 = 0;
+	uint64_t	value4 = 0;
+	uint64_t	value5 = 0;
 	
 	std::string text;
-
-	
 };
 
 
@@ -35,7 +49,10 @@ struct Track {
 
 	uint8_t channel = 0;
 
-	std::vector<Note> notes;
+	std::map<
+		std::string,
+		std::vector<MetaEvent>
+	> meta_events;
 	
 	std::map<
 		std::string,

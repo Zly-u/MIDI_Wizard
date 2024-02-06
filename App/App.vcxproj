@@ -242,7 +242,13 @@
     <Content Include="libs\SDL_image\lib\x86\SDL2_image.lib" />
     <Content Include="res\place_holder.png" />
     <Content Include="res\test_type0.mid" />
+    <Content Include="res\test_type0_NoteAtStart.mid" />
+    <Content Include="res\test_type0_NoteAtStart_2.mid" />
+    <Content Include="res\test_type0_NoteAtStart_andEnd.mid" />
+    <Content Include="res\test_type0_NoteAtStart_Offset.mid" />
+    <Content Include="res\test_type0_spaced.mid" />
     <Content Include="res\test_type1.mid" />
+    <Content Include="res\test_type1_MultiTrack.mid" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="libs\imgui\imgui.natvis" />

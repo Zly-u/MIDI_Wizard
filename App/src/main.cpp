@@ -18,8 +18,8 @@ int main(int /*argc*/, char** /*argv*/){
 
 	constexpr ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-	// char test_mid[] = "res/test_type1_MultiTrack.mid";
-	char test_mid[] = "res/test_type0_spaced.mid";
+	char test_mid[] = "res/test_type1_MultiTrack.mid";
+	// char test_mid[] = "res/test_type0_spaced_CH2.MID";
 	MIDI::Read(test_mid);
 	
     // Main loop

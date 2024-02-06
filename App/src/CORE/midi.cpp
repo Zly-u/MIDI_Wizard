@@ -50,13 +50,13 @@ std::map<uint8_t, std::string> meta_event_names = {
 	{0x7F, "Sequencer Specific"},
 };
 std::map<uint8_t, std::string> event_names = {
-	{0x8, "Note OFF"},
-	{0x9, "Note ON"},
-	{0xA, "Note Aftertouch"},
-	{0xB, "Controller"},
-	{0xC, "Program Change"},
-	{0xD, "Channel Aftertouch"},
-	{0xE, "Pitch Bend"},
+	{0x80, "Note OFF"},
+	{0x90, "Note ON"},
+	{0xA0, "Note Aftertouch"},
+	{0xB0, "Controller"},
+	{0xC0, "Program Change"},
+	{0xD0, "Channel Aftertouch"},
+	{0xE0, "Pitch Bend"},
 };
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
@@ -75,26 +75,43 @@ void flip_bytes_inplace(Type& origValue) {
 	}
 }
 
+/*
+uint64_t midi_parse_variable_length(void* parser, int32_t *offset)
+{
+	uint64_t value = 0;
+	int32_t  i     = *offset;
+
+	for (; i < parser->size; ++i) {
+		value <<= 7;
+		value |= parser->in[i] & 0x7f
+		if (!(parser->in[i] & 0x80))
+			break;
+	}
+	*offset = i + 1;
+	return value;
+}
+*/
 
 uint64_t parse_variable_length(std::ifstream& file) {
 	uint64_t value = 0;
-	char fetchedOrigValue = 0;
-	uint8_t bit = 0;
-	
+	uint8_t  bit   = 0;
+	unsigned char     fetchedOrigValue = 0;
+
+	// printf("Bytes: ");
 	while(true) {
 		bit++;
-		assert(bit <= 8 && "Retrieving VLV failed, value longer than 8 Bytes.\n");
-		file.read(&fetchedOrigValue, sizeof(char));
-
+		file.read(reinterpret_cast<char*>(&fetchedOrigValue), sizeof(char));
+		// printf("%x, ", fetchedOrigValue);
 		// Append the byte into our variable
-		value <<= 7;
-		value |= fetchedOrigValue;
+		value = (value << 7) | (fetchedOrigValue & 0x7f);
 		
-		if(fetchedOrigValue < 0) {
+		if(!(fetchedOrigValue & 0x80) || bit >= 8) {
 			break;
 		}
 	}
-
+	// printf("\n");
+	// printf("Found vlv: %llu\n\n", value);
+	
 	return value;
 }
 
@@ -186,11 +203,13 @@ namespace MIDI {
 		parsed_midi.name = found_file_name;
 
 		char     track_chunk_ID[5];
-		uint64_t track_chunk_size;
+		uint32_t track_chunk_size;
 		uint64_t delta_time;
 		uint8_t  event;
+		
 		for(size_t track_n = 0; track_n < midi_header.number_of_tracks; ++track_n) {
-			Track new_track;
+			Track		new_track;
+			uint64_t	absolute_time = 0;
 			
 			// Reading track's header
 			midi_file.read(track_chunk_ID, sizeof(char) * 4);
@@ -204,28 +223,31 @@ namespace MIDI {
 			// Get chunk size
 			midi_file.read(reinterpret_cast<char*>(&track_chunk_size), sizeof(char) * 4);
 			flip_bytes_inplace(track_chunk_size);
-			printf("Track chunk size: %llu\n", track_chunk_size);
+			printf("Track chunk size: %u\n", track_chunk_size);
 			
 			bool is_reading_track = true;
 			while(is_reading_track) {
 				delta_time = parse_variable_length(midi_file);
-				printf("Found vlv: %llu", delta_time);
-				
-				midi_file.read(reinterpret_cast<char*>(&event), sizeof(char));
 
-				
+				absolute_time += delta_time;
+
+				// Get event
+				midi_file.read(reinterpret_cast<char*>(&event), sizeof(char));
 				if(event == 0xFF) { // Meta events
-					MetaEvent new_meta_event;
 					char meta_event_type;
 					midi_file.read(&meta_event_type, sizeof(char));
 					
-					
+					MetaEvent new_meta_event;
 					new_meta_event.type = meta_event_type;
 					new_meta_event.name = meta_event_names[meta_event_type];
+					new_meta_event.time = absolute_time;
+					
 					switch(meta_event_type) {
-						case 0x00: { // Sequence Number
-							uint8_t MSB = 0;
-							uint8_t LSB = 0;
+						case 0x00: {	// Sequence Number
+							uint8_t MSB = 0; // [0, 255]
+							uint8_t LSB = 0; // [0, 255]
+
+							midi_file.ignore(); // Ignoring size value
 							midi_file.read(reinterpret_cast<char*>(&MSB), sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&LSB), sizeof(char));
 							
@@ -240,132 +262,176 @@ namespace MIDI {
 						case 0x05:		// Lyrics
 						case 0x06:		// Marker 
 						case 0x07: {	// Cue Point
-							const uint64_t meta_event_size = parse_variable_length(midi_file);
-							char* text = new char[meta_event_size];
+							const uint64_t  meta_event_size = parse_variable_length(midi_file);
+							char*           text            = new char[meta_event_size+1];
+							
 							midi_file.read(text, sizeof(char) * meta_event_size);
+							text[meta_event_size] = '\0';
 
 							new_meta_event.text = text;
-							
+
 							delete[] text;
 							break;
 						}
 						////////////////////////////////////////////////////////////////////////////////////////////////
-						case 0x20: { // MIDI Channel Prefix
-							uint8_t channel;
+						case 0x20: {	// MIDI Channel Prefix
+							uint8_t channel; // [0, 15]
+
+							midi_file.ignore(); // Ignoring size value
 							midi_file.read(reinterpret_cast<char*>(&channel), sizeof(char));
+
+							new_meta_event.value1 = channel;
 							
 							break;
 						}
 						////////////////////////////////////////////////////////////////////////////////////////////////
-						case 0x2F: { // END OF TRACK
-							is_reading_track = false;
-							break;
-						}
-						////////////////////////////////////////////////////////////////////////////////////////////////
-						//    EVENT   |   type    | len | Microseconds/Quarter-Note
-						// 255 (0xFF) | 81 (0x51) |  3  | 0-8355711
 						// MICROSECONDS_PER_MINUTE = 60000000 BPM = MICROSECONDS_PER_MINUTE / MPQNMPQN = MICROSECONDS_PER_MINUTE / BPM
 						// If not provided, the tempo should be set to 120 BPM.
-						case 0x51: { // Set Tempo
-							uint32_t tempo;
+						case 0x51: {	// Set Tempo
+							uint32_t tempo; // 0-8355711
+
+							midi_file.ignore();
 							midi_file.read(reinterpret_cast<char*>(&tempo), sizeof(char) * 3);
 							flip_bytes_inplace(tempo);
+
+							new_meta_event.value1 = tempo;
 							
 							break;
 						}
 						////////////////////////////////////////////////////////////////////////////////////////////////
-						case 0x54: { // SMPTE Offset
-							uint8_t hour;
-							uint8_t min;
-							uint8_t sec;
-							uint8_t fr;
-							uint8_t sub_fr;
-							
+						case 0x54: {	// SMPTE Offset
+							uint8_t hour;	// [0-23]
+							uint8_t min;	// [0-59]
+							uint8_t sec;	// [0-59]
+							uint8_t fr;		// [0-30]
+							uint8_t sub_fr;	// [0-99]
+
+							midi_file.ignore(); // Ignoring size value
 							midi_file.read(reinterpret_cast<char*>(&hour),	sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&min),	sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&sec),	sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&fr),	sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&sub_fr),sizeof(char));
+
+							new_meta_event.value1 = hour; 
+							new_meta_event.value2 = min;
+							new_meta_event.value3 = sec;
+							new_meta_event.value4 = fr;
+							new_meta_event.value5 = sub_fr;
 							
 							break;
 						}
 						////////////////////////////////////////////////////////////////////////////////////////////////
-						case 0x58: { // Time Signature
-							uint8_t number;
-							uint8_t denominator;
-							uint8_t metro;
-							uint8_t _32nds;
-							
+						case 0x58: {	// Time Signature
+							uint8_t number;			// [0-255]
+							uint8_t denominator;	// [0-255]
+							uint8_t metro;			// [0-255]
+							uint8_t _32nds;			// [1-255]
+
+							midi_file.ignore(); // Ignoring size value
 							midi_file.read(reinterpret_cast<char*>(&number),		sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&denominator),	sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&metro),			sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&_32nds),		sizeof(char));
+
+							new_meta_event.value1 = number; 
+							new_meta_event.value2 = denominator;
+							new_meta_event.value3 = metro;
+							new_meta_event.value4 = _32nds;
 							
 							break;
 						}
 						////////////////////////////////////////////////////////////////////////////////////////////////
-						case 0x59: { // Key Signature
+						case 0x59: {	// Key Signature
 							int8_t  key;	//[-7, 7]
 							bool	scale;	//major/minor
 
-							midi_file.read(reinterpret_cast<char*>(&key),		sizeof(char));
-							midi_file.read(reinterpret_cast<char*>(&scale),		sizeof(char));
+							midi_file.ignore(); // Ignoring size value
+							midi_file.read(reinterpret_cast<char*>(&key),	sizeof(char));
+							midi_file.read(reinterpret_cast<char*>(&scale),	sizeof(char));
+
+							new_meta_event.value1 = key + 7; 
+							new_meta_event.value2 = scale;
 							
 							break;
 						}
-						case 0x7F: { // Sequencer Specific
+						case 0x7F: {	// Sequencer Specific
 							const uint64_t meta_event_size = parse_variable_length(midi_file);
-							char* text = new char[meta_event_size];
+							char* text = new char[meta_event_size - 4];
 							midi_file.read(text, sizeof(char) * meta_event_size);
+
+							new_meta_event.text = text;
 							
+							break;
+						}
+						////////////////////////////////////////////////////////////////////////////////////////////////
+						case 0x2F: {	// END OF TRACK
+							// Skip last 0x0 of the ending pattern
+							// pattern: 0xFF 0x2F 0x00
+							midi_file.ignore();
+							is_reading_track = false;
 							break;
 						}
 						////////////////////////////////////////////////////////////////////////////////////////////////
 						default: {
-							printf("This Meta Event is undefined: %x", meta_event_type);
+							printf("This Meta Event is undefined: %x\n", meta_event_type);
 						} 
 					}
+					new_track.meta_events[new_meta_event.name].push_back(new_meta_event);
 				}
-				else // Non meta events
+				else // MIDI events
 				{
 					Event new_event;
 					new_event.type = event;
-					new_event.name = meta_event_names[event];
-					switch(event) {
-						case 0x8: { // Note OFF
-							uint8_t channel;
-							uint8_t note;
-							uint8_t vel;
-							
-							midi_file.read(reinterpret_cast<char*>(&channel),	sizeof(char));
+					new_event.name = event_names[event & 0xF0];
+					new_event.time = absolute_time;
+					switch(event & 0xF0) {
+						case 0x80: { // Note OFF
+							uint8_t channel;	// [0-15]
+							uint8_t note;		// [0-127]
+							uint8_t vel;		// [0-127]
+
+							channel = event & 0x0F;
 							midi_file.read(reinterpret_cast<char*>(&note),		sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&vel),		sizeof(char));
 
+							new_event.value1 = channel;
+							new_event.value2 = note;
+							new_event.value3 = vel;
+							
 							break;
 						}
-						case 0x9: { // Note ON
-							uint8_t channel;
-							uint8_t note;
-							uint8_t vel;
+						case 0x90: { // Note ON
+							uint8_t channel;	// [0-15]
+							uint8_t note;		// [0-127]
+							uint8_t vel;		// [0-127]
 							
-							midi_file.read(reinterpret_cast<char*>(&channel),	sizeof(char));
+							channel = event & 0x0F;
 							midi_file.read(reinterpret_cast<char*>(&note),		sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&vel),		sizeof(char));
 
+							new_event.value1 = channel;
+							new_event.value2 = note;
+							new_event.value3 = vel;
+							
 							break;
 						}
-						case 0xA: { // Note Aftertouch
-							uint8_t channel;
-							uint8_t note;
-							uint8_t amount;
+						case 0xA0: { // Note Aftertouch
+							uint8_t channel;	// [0-15]
+							uint8_t note;		// [0-127]
+							uint8_t amount;		// [0-127]
 							
-							midi_file.read(reinterpret_cast<char*>(&channel),	sizeof(char));
+							channel = event & 0x0F;
 							midi_file.read(reinterpret_cast<char*>(&note),		sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&amount),	sizeof(char));
 
+							new_event.value1 = channel;
+							new_event.value2 = note;
+							new_event.value3 = amount;
+							
 							break;
 						}
-						case 0xB: { // Controller
+						case 0xB0: { // Controller
 							/*	CONTROLLER TYPES: 
 								0		(0x00) 			Bank Select
 								1		(0x01) 			Modulation
@@ -407,56 +473,74 @@ namespace MIDI {
 								101		(0x65) 			Registered Parameter Number (MSB)
 								121-127	(0x79-0x7F) 	Mode Messages
 							*/
-							uint8_t channel;
-							uint8_t controller_type;
-							uint8_t value;
+							uint8_t channel;			// [0-15]
+							uint8_t controller_type;	// [0-127]
+							uint8_t value;				// [0-127]
 							
-							midi_file.read(reinterpret_cast<char*>(&channel),			sizeof(char));
+							channel = event & 0x0F;
 							midi_file.read(reinterpret_cast<char*>(&controller_type),	sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&value),				sizeof(char));
 
+							new_event.value1 = channel;
+							new_event.value2 = controller_type;
+							new_event.value3 = value;
+							
 							break;
 						}
-						case 0xC: { // Program Change 
-							uint8_t channel;
-							uint8_t program_number;
+						case 0xC0: { // Program Change 
+							uint8_t channel;		// [0-15]
+							uint8_t program_number;	// [0-127]
 							
-							midi_file.read(reinterpret_cast<char*>(&channel),		sizeof(char));
+							channel = event & 0x0F;
 							midi_file.read(reinterpret_cast<char*>(&program_number),sizeof(char));
 
-							break;
-						}
-						case 0xD: { // Channel Aftertouch 
-							uint8_t channel;
-							uint8_t amount;
-							
-							midi_file.read(reinterpret_cast<char*>(&channel),	sizeof(char));
-							midi_file.read(reinterpret_cast<char*>(&amount),	sizeof(char));
+							new_event.value1 = channel;
+							new_event.value2 = program_number;
 							
 							break;
 						}
-						case 0xE: { // Pitch Bend
-							uint8_t channel;
-							uint8_t LSB;
-							uint8_t MSB;
+						case 0xD0: { // Channel Aftertouch 
+							uint8_t channel;	// [0-15]
+							uint8_t amount;		// [0-127]
 							
-							midi_file.read(reinterpret_cast<char*>(&channel),	sizeof(char));
+							channel = event & 0x0F;
+							midi_file.read(reinterpret_cast<char*>(&amount), sizeof(char));
+
+							new_event.value1 = channel;
+							new_event.value2 = amount;
+							
+							break;
+						}
+						case 0xE0: { // Pitch Bend
+							uint8_t channel;	// [0-15]
+							uint8_t LSB;		// [0-127]
+							uint8_t MSB;		// [0-127]
+							
+							channel = event & 0x0F;
 							midi_file.read(reinterpret_cast<char*>(&LSB),		sizeof(char));
 							midi_file.read(reinterpret_cast<char*>(&MSB),		sizeof(char));
+
+							new_event.value1 = channel;
+							new_event.value2 = LSB;
+							new_event.value3 = MSB;
 							
 							break;
 						}
 						default: {
-							printf("This Event is undefined: %x", event);
+							printf("This Event is undefined: %x\n", event);
 						} 
 					}
+					
+					new_track.events[new_event.name].push_back(new_event);
 				}
 			}
 
-			parsed_midi.tracks.emplace_back(new_track);
+			parsed_midi.tracks.push_back(new_track);
 		}
 		
-		
+		for(Track& track : parsed_midi.tracks) {
+			printf("Track's name: %s\n", track.name.c_str());
+		}
 		
 		return true;
 	}
