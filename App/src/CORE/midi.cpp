@@ -534,7 +534,9 @@ namespace MIDI {
 					new_track.events[new_event.name].push_back(new_event);
 				}
 			}
-
+			if(new_track.meta_events.contains("Track Name")) {
+				new_track.name = new_track.meta_events["Track Name"][0].text;
+			}
 			parsed_midi.tracks.push_back(new_track);
 		}
 		
