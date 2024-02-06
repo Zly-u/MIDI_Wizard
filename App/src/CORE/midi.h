@@ -6,33 +6,50 @@
 #include <vector>
 
 
-// TODO: Notes
-struct note {
-	uint8_t tone = 0;
-	float   pan  = 0.0f;
-	float   vel  = 0.0f;
+struct Note {
+	uint64_t delta = 0;
+	uint8_t  tone  = 0;
+	uint8_t  vel   = 0;
 };
 
-// TODO: Tracks
-struct track {
-	std::vector<uint8_t>           notes;
-	std::map<std::string, uint8_t> cc;
-};
 
-// TODO: Lyrics
-struct lyrics_text {
+struct MetaEvent {
+	uint8_t type;
+	std::string name;
+	
 	std::string text;
-	float       length;
 };
 
-// TODO: Midi
+struct Event {
+	uint8_t type;
+	std::string name;
+	
+	std::string text;
+
+	
+};
+
+
+struct Track {
+	std::string name;
+
+	uint8_t channel = 0;
+
+	std::vector<Note> notes;
+	
+	std::map<
+		std::string,
+		std::vector<Event>
+	> events;
+};
+
+
 static struct midi {
 	std::string name;
 	std::string time_signature = "4/4";
 	uint16_t bpm = 0;
 	
-	std::vector<track>       tracks;
-	std::vector<lyrics_text> lyrics; //NOTE: Prob use map for using keys as time starts
+	std::vector<Track> tracks;
 } parsed_midi;
 
 
