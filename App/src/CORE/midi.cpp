@@ -506,11 +506,34 @@ namespace MIDI {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	bool Read(char* file_path) {
-		std::ifstream midi_file(file_path, std::ifstream::binary);
-		if(!midi_file.good()){
-			return false;
-		}
-
+		// std::ifstream midi_file(file_path, std::ifstream::binary | std::ios::ate);
+		// if(!midi_file.good()){
+		// 	return false;
+		// }
+		// const std::streamsize size = midi_file.tellg(); // By getting the position we get the size in bytes.
+		// char* midi_cache = new char[size];
+		// midi_file.seekg(0, std::ios::beg); // Go back to the start for reading.
+		// if (!midi_file.read(midi_cache, size)) { // Read into our buffer variable.
+		// 	debug::printf("Failed to cache Midi file into memory\n");
+		// 	delete[] midi_cache;
+		// 	return false;
+		// }
+		// midi_file.seekg(0, std::ios::beg);
+		
+		
+		// Caching the file into memory.
+		// std::ostringstream buf;
+		// buf << midi_file.rdbuf();
+		// std::string str = buf.str();
+		
+		
+		// std::filebuf*         midi_buf         = midi_file.rdbuf();
+		// const std::streamsize midi_file_size   = midi_buf->pubseekoff(0, std::ifstream::end, std::ifstream::in);
+		// midi_buf->pubseekpos(0, std::ifstream::in);
+		// char*                 midi_buffer_data = new char[midi_file_size];
+		// midi_buf->sgetn(midi_buffer_data, midi_file_size);
+		
+		
 		//////////////////////////////////////////
 		////         GETTING FILE NAME        ////
 		//////////////////////////////////////////
@@ -605,8 +628,7 @@ namespace MIDI {
 
 		{
 			std::vector<std::unique_ptr<std::jthread>> threads;
-		
-			// TODO: Make it multithreaded.
+			
 			for(size_t track_index = 0; track_index < midi_header.number_of_tracks; ++track_index) {
 				threads.push_back(std::make_unique<std::jthread>(
 					worker_TrackRead,
