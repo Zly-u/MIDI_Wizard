@@ -9,10 +9,13 @@
 
 class window_handler {
 public:
-	// Data
+	// SDL
 	SDL_Renderer*	SDL_Renderer_ptr= nullptr;
-	ImGuiIO*		ImIO_ptr		= nullptr;
 	SDL_Window*		SDL_Window_ptr	= nullptr;
+
+	// ImGui
+	ImGuiContext* context  = nullptr;
+	ImGuiIO*      ImIO_ptr = nullptr;
 	
 public:
 	window_handler();

@@ -31,6 +31,7 @@
     <ClCompile Include="libs\imgui\imgui_widgets.cpp" />
     <ClCompile Include="libs\imgui\main_demo.cpp" />
     <ClCompile Include="src\CORE\core.cpp" />
+    <ClCompile Include="src\CORE\helpers.cpp" />
     <ClCompile Include="src\CORE\midi.cpp" />
     <ClCompile Include="src\CORE\victor.cpp" />
     <ClCompile Include="src\GUI\gui.cpp" />
@@ -202,6 +203,7 @@
     <ClInclude Include="libs\SDL_image\include\SDL_image.h" />
     <ClInclude Include="libs\stb\stb_image.h" />
     <ClInclude Include="src\CORE\core.h" />
+    <ClInclude Include="src\CORE\helpers.h" />
     <ClInclude Include="src\CORE\midi.h" />
     <ClInclude Include="src\CORE\victor.h" />
     <ClInclude Include="src\GUI\gui.h" />
@@ -393,6 +395,7 @@ xcopy /y /d "$(ProjectDir)libs\SDL_image\lib\$(Platform)\SDL2_image.dll" "$(OutD
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

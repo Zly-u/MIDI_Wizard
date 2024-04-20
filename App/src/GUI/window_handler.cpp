@@ -86,7 +86,7 @@ int window_handler::WindowSetup(){
 
 	// Setup ImGui context
 	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
+	context = ImGui::CreateContext();
 	ImIO_ptr = &ImGui::GetIO();
 	ImIO_ptr->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	ImIO_ptr->ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
@@ -97,7 +97,7 @@ int window_handler::WindowSetup(){
 		SDL_Renderer_ptr
 	);
 	ImGui_ImplSDLRenderer2_Init(SDL_Renderer_ptr);
-
+	
 	return 0;
 }
 
