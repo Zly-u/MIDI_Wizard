@@ -18,6 +18,8 @@ int main(int /*argc*/, char** /*argv*/){
 	
 	constexpr ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+	// char test_mid[] = "res/Pi.mid"; // black midi stress test :)
+	
 	char test_mid[] = "res/Scatman's-World.mid";
 	// char test_mid[] = "res/test_type1_MultiTrack_names.mid";
 	// char test_mid[] = "res/SEMBELLO.Maniac.mid";

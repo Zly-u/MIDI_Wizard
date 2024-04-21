@@ -2,8 +2,17 @@
 
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
+
+#include "helpers.h"
+
+
+namespace std {
+	class stop_token;
+}
+
 
 static std::map<uint8_t, std::string> meta_event_names = {
 	{0x00, "Sequence Number"},
@@ -93,34 +102,41 @@ struct MIDI_Event {
 
 
 struct Track {
+	Track() = default;
+	
 	std::string name;
 
 	uint8_t channel = 0;
 
 	std::map<
 		std::string,
-		std::vector<MetaEvent>
+		std::vector<std::shared_ptr<MetaEvent>>
 	> meta_events;
 	
 	std::map<
 		std::string,
-		std::vector<MIDI_Event>
+		std::vector<std::shared_ptr<MIDI_Event>>
 	> events;
 };
 
 
-static struct midi {
+struct midi {
 	std::string name;
 	std::string time_signature = "4/4";
 	uint16_t bpm = 0;
 	
-	std::vector<Track> tracks;
-} parsed_midi;
+	std::vector<std::shared_ptr<Track>> tracks;
+
+	~midi() {
+		debug::printf("Parsed MIDI destructed\n");
+	}
+};
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 
 namespace MIDI {
+	void worker_TrackRead(const std::stop_token& stop_token, char* file_path, uint8_t track_index);
 	bool Read(char* file_path);
 }

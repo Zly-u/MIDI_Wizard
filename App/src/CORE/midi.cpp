@@ -9,11 +9,11 @@
 #include <ranges>
 
 #include "helpers.h"
+#include "minitrace.h"
 
 ////////////////////////////////////////////////////////////////////////
 
 struct MIDI_ParsedData {
-	char           chunk_ID[5];
 	uint32_t       header_size      = 0;
 	unsigned short type             = 0; // 0-2
 	unsigned short number_of_tracks = 1; // 1-65535
@@ -42,6 +42,8 @@ struct TrackParsedData {
 	
 	EventsData events;
 };
+
+static midi parsed_midi;
 
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
@@ -108,24 +110,30 @@ uint64_t parse_vlv(std::ifstream& file) {
 
 namespace MIDI {
 	std::mutex g_track_write_mutex;
-	void worker_TrackRead(
-		const std::stop_token& stop_token,
-		char* file_path,
-		int track_index
-	){
+	
+	void worker_TrackRead(const std::stop_token& stop_token, char* file_path, uint8_t track_index) {
+		#ifdef MTR_ENABLED
+		char thread_name[30];
+		(void)sprintf_s(thread_name, "Track Thread %i", track_index);
+		MTR_META_THREAD_NAME(thread_name);
+		#endif
+		
+		// uint64_t read_pos = 0;
+		
 		std::ifstream midi_file(file_path, std::ifstream::binary);
 		if(!midi_file.good()) {
 			debug::printf("Couldn't open the file\n");
 			return;
 		}
 
-		midi_file.ignore(14); // Skip the header
+		midi_file.ignore(14); // Skip the MIDI header part
 		
-		debug::printf("Track Read %d started.\n", track_index);
-		// std::this_thread::sleep_for(std::chrono::seconds(2 * (track_index+1)));
-		Track    new_track;
+		debug::printf("[Track %d] Reading has started.\n", track_index);
+
+		const std::shared_ptr<Track> new_track = std::make_shared<Track>();
+		
 		char     track_chunk_ID[5];
-		uint32_t track_chunk_size;
+		uint32_t track_chunk_size = 0;
 		uint64_t absolute_time = 0;
 		uint64_t delta_time;
 		uint8_t  event;
@@ -139,15 +147,17 @@ namespace MIDI {
 			}
 			
 			// Reading track's header
-			midi_file.read(track_chunk_ID, sizeof(char) * 4);
-			track_chunk_ID[4] = '\0';
-
-			if(strcmp(track_chunk_ID, "MTrk") != 0) {
-				debug::printf("[Track %d] not MTrk: %s\n", track_index, track_chunk_ID);
-				assert(false && "There is no track or MIDI is corrupted.\n");
-				return;
-			}
+			// midi_file.read(track_chunk_ID, sizeof(char) * 4);
+			// track_chunk_ID[4] = '\0';
+			//
+			// if(strcmp(track_chunk_ID, "MTrk") != 0) {
+			// 	debug::printf("[Track %d] not MTrk: %s\n", track_index, track_chunk_ID);
+			// 	assert(false && "There is no track or MIDI is corrupted.\n");
+			// 	return;
+			// }
 			
+			// Skip the track label
+			midi_file.ignore(4);
 			// Get chunk size to skip
 			uint32_t track_chunk_size_toSkip;
 			midi_file.read(reinterpret_cast<char*>(&track_chunk_size_toSkip), sizeof(char) * 4);
@@ -157,21 +167,30 @@ namespace MIDI {
 			currently_skipped_track++;
 		}
 
-		// Reading targeted track's header
+		// Reading track label.
 		midi_file.read(track_chunk_ID, sizeof(char) * 4);
 		track_chunk_ID[4] = '\0';
 		
 		// Check if we are at a valid track after skipping.
 		if(strcmp(track_chunk_ID, "MTrk") != 0) {
-			debug::printf("Found chunk '%s' at %d \n", track_chunk_ID, midi_file.tellg());
+			debug::printf("Found chunk '%s' at %d \n", track_chunk_ID, static_cast<uint64_t>(midi_file.tellg()));
 			assert(false && "There is no track after skipping, or MIDI is corrupted.\n");
 			return;
 		}
 		
 		midi_file.read(reinterpret_cast<char*>(&track_chunk_size), sizeof(char) * 4);
 		flip_bytes_inplace(track_chunk_size);
+		
 		debug::printf("Track chunk size: %u\n", track_chunk_size);
 
+		{
+			MTR_SCOPE("Track Read", "EVENT VECTORS RESERVE");
+			// Reseves vector sizes to the approximate size for the midi.
+			const uint64_t to_reserve = track_chunk_size/5;
+			new_track->events[event_names[0x80]].reserve(to_reserve);
+			new_track->events[event_names[0x90]].reserve(to_reserve);
+		}
+		
 		// Start Events reading loop
 		bool is_reading_track = true;
 		while(is_reading_track) {
@@ -186,14 +205,16 @@ namespace MIDI {
 
 			// Get event
 			midi_file.read(reinterpret_cast<char*>(&event), sizeof(char));
+			
 			if(event == 0xFF) { // Meta events
 				char meta_event_type;
+				
 				midi_file.read(&meta_event_type, sizeof(char));
 				
-				MetaEvent new_meta_event;
-				new_meta_event.type = meta_event_type;
-				new_meta_event.name = meta_event_names[meta_event_type];
-				new_meta_event.time = absolute_time;
+				std::shared_ptr<MetaEvent> new_meta_event = std::make_shared<MetaEvent>();
+				new_meta_event->type = meta_event_type;
+				new_meta_event->name = meta_event_names[meta_event_type];
+				new_meta_event->time = absolute_time;
 				
 				switch(meta_event_type) {
 					case 0x00: {	// Sequence Number
@@ -203,6 +224,8 @@ namespace MIDI {
 						midi_file.ignore(); // Ignoring size byte
 						midi_file.read(reinterpret_cast<char*>(&MSB), sizeof(char));
 						midi_file.read(reinterpret_cast<char*>(&LSB), sizeof(char));
+						
+						// read_pos += 3;
 						
 						break;
 					}
@@ -222,19 +245,17 @@ namespace MIDI {
 						midi_file.read(text, sizeof(char) * meta_event_size);
 						text[meta_event_size] = '\0';
 						
-						new_meta_event.text = text;
+						new_meta_event->text = text;
 						
 						delete[] text;
 						break;
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0x20: {	// MIDI Channel Prefix
-						uint8_t channel; // [0, 15]
+						uint64_t& channel = new_meta_event->value1; // [0, 15]
 
 						midi_file.ignore(); // Ignoring size byte
 						midi_file.read(reinterpret_cast<char*>(&channel), sizeof(char));
-
-						new_meta_event.value1 = channel;
 						
 						break;
 					}
@@ -242,7 +263,7 @@ namespace MIDI {
 					// MICROSECONDS_PER_MINUTE = 60000000 BPM = MICROSECONDS_PER_MINUTE / MPQNMPQN = MICROSECONDS_PER_MINUTE / BPM
 					// If not provided, the tempo should be set to 120 BPM.
 					case 0x51: {	// Set Tempo
-						uint64_t& tempo = new_meta_event.value1; // 0-8355711
+						uint64_t& tempo = new_meta_event->value1; // 0-8355711
 
 						midi_file.ignore(); // Ignoring size byte
 						midi_file.read(reinterpret_cast<char*>(&tempo), sizeof(char) * 3);
@@ -252,12 +273,12 @@ namespace MIDI {
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0x54: {                                  // SMPTE Offset
-						uint64_t& hour   = new_meta_event.value1; // [0-23]
-						uint64_t& min    = new_meta_event.value2; // [0-59]
-						uint64_t& sec    = new_meta_event.value3; // [0-59]
-						uint64_t& fr     = new_meta_event.value4; // [0-30]
-						uint64_t& sub_fr = new_meta_event.value5; // [0-99]
-
+						uint64_t& hour   = new_meta_event->value1; // [0-23]
+						uint64_t& min    = new_meta_event->value2; // [0-59]
+						uint64_t& sec    = new_meta_event->value3; // [0-59]
+						uint64_t& fr     = new_meta_event->value4; // [0-30]
+						uint64_t& sub_fr = new_meta_event->value5; // [0-99]
+						
 						midi_file.ignore(); // Ignoring size value
 						midi_file.read(reinterpret_cast<char*>(&hour),	sizeof(char));
 						midi_file.read(reinterpret_cast<char*>(&min),	sizeof(char));
@@ -269,11 +290,12 @@ namespace MIDI {
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0x58: { // Time Signature
-						uint64_t& number      = new_meta_event.value1; // [0-255]
-						uint64_t& denominator = new_meta_event.value2; // [0-255]
-						uint64_t& metro       = new_meta_event.value3; // [0-255]
-						uint64_t& _32nds      = new_meta_event.value4; // [1-255]
-
+						// PROFILE_SCOPE("Time Signature");
+						uint64_t& number      = new_meta_event->value1; // [0-255]
+						uint64_t& denominator = new_meta_event->value2; // [0-255]
+						uint64_t& metro       = new_meta_event->value3; // [0-255]
+						uint64_t& _32nds      = new_meta_event->value4; // [1-255]
+						//
 						midi_file.ignore(); // Ignoring size byte
 						midi_file.read(reinterpret_cast<char*>(&number),		sizeof(char));
 						midi_file.read(reinterpret_cast<char*>(&denominator),	sizeof(char));
@@ -284,6 +306,7 @@ namespace MIDI {
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0x59: {	// Key Signature
+						// PROFILE_SCOPE("Key Signature");
 						int8_t  key;	//[-7, 7]
 						bool	scale;	//major/minor
 
@@ -291,8 +314,8 @@ namespace MIDI {
 						midi_file.read(reinterpret_cast<char*>(&key),	sizeof(char));
 						midi_file.read(reinterpret_cast<char*>(&scale),	sizeof(char));
 
-						new_meta_event.value1 = key + 7; 
-						new_meta_event.value2 = scale;
+						new_meta_event->value1 = key + 7; 
+						new_meta_event->value2 = scale;
 						
 						break;
 					}
@@ -309,70 +332,78 @@ namespace MIDI {
 						debug::printf("This Meta Event is undefined: %x\n", meta_event_type);
 					} 
 				}
-				new_track.meta_events[new_meta_event.name].push_back(new_meta_event);
+
+				MTR_SCOPE("MIDI Events", "META EVENT SAVE");
+				new_track->meta_events[new_meta_event->name].push_back(new_meta_event);
 			}
 			else if ((event & 0xF0) == 0xF0) // Sys Ex events
 			{
 				// NOTE: we just ignore the data for now.
-				SysExEvent new_sys_ex_event;
-				new_sys_ex_event.type = event;
-				new_sys_ex_event.name = "SysEx";
-				new_sys_ex_event.time = absolute_time;
+				// SysExEvent new_sys_ex_event;
+				// new_sys_ex_event.type = event;
+				// new_sys_ex_event.name = "SysEx";
+				// new_sys_ex_event.time = absolute_time;
 			
-				uint64_t sysex_size = 0;
-				midi_file.read(reinterpret_cast<char*>(&sysex_size),sizeof(char));
+				int64_t sysex_size = 0;
+				midi_file.read(reinterpret_cast<char*>(&sysex_size), sizeof(char));
 				midi_file.ignore(sysex_size - 1);	// Skip packet
 				midi_file.ignore();					// Skip ending byte.
 			}
 			else // MIDI events
 			{
-				MIDI_Event new_event;
-				new_event.type    = event;
-				new_event.name    = event_names[event & 0xF0];
-				new_event.time    = absolute_time;
-				new_event.channel = event & 0x0F; // Channel: [0-15]
+				MTR_SCOPE("MIDI Events", "EVENT READ");
+				
+				std::shared_ptr<MIDI_Event> new_event = std::make_shared<MIDI_Event>();
+				new_event->type    = event;
+				new_event->name    = event_names[event & 0xF0];
+				new_event->time    = absolute_time;
+				new_event->channel = event & 0x0F; // Channel: [0-15]
 				
 				switch(event & 0xF0) {
 					case 0x80: { // Note OFF
+						MTR_SCOPE("MIDI Events", "Note OFF");
 						uint8_t note;		// [0-127]
 						uint8_t vel;		// [0-127]
 
 						midi_file.read(reinterpret_cast<char*>(&note),	sizeof(char));
 						midi_file.read(reinterpret_cast<char*>(&vel),	sizeof(char));
 						
-						new_event.value1 = note;
-						new_event.value2 = vel;
+						new_event->value1 = note;
+						new_event->value2 = vel;
 						
 						break;
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0x90: { // Note ON
+						MTR_SCOPE("MIDI Events", "Note ON");
 						uint8_t note;		// [0-127]
 						uint8_t vel;		// [0-127]
 						
 						midi_file.read(reinterpret_cast<char*>(&note),	sizeof(char));
 						midi_file.read(reinterpret_cast<char*>(&vel),	sizeof(char));
 
-						new_event.value1 = note;
-						new_event.value2 = vel;
+						new_event->value1 = note;
+						new_event->value2 = vel;
 						
 						break;
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0xA0: { // Note Aftertouch
+						MTR_SCOPE("TRACK READ", "Note Aftertouch");
 						uint8_t note;		// [0-127]
 						uint8_t amount;		// [0-127]
 						
 						midi_file.read(reinterpret_cast<char*>(&note),		sizeof(char));
 						midi_file.read(reinterpret_cast<char*>(&amount),	sizeof(char));
 
-						new_event.value1 = note;
-						new_event.value2 = amount;
+						new_event->value1 = note;
+						new_event->value2 = amount;
 						
 						break;
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0xB0: { // Controller
+						MTR_SCOPE("TRACK READ", "Controller");
 						/*	CONTROLLER TYPES: 
 							0		(0x00) 			Bank Select
 							1		(0x01) 			Modulation
@@ -420,41 +451,44 @@ namespace MIDI {
 						midi_file.read(reinterpret_cast<char*>(&controller_type),	sizeof(char));
 						midi_file.read(reinterpret_cast<char*>(&value),				sizeof(char));
 
-						new_event.value1 = controller_type;
-						new_event.value2 = value;
+						new_event->value1 = controller_type;
+						new_event->value2 = value;
 						
 						break;
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
-					case 0xC0: { // Program Change 
+					case 0xC0: { // Program Change
+						MTR_SCOPE("TRACK READ", "Program Change");
 						uint8_t program_number;	// [0-127]
 						
 						midi_file.read(reinterpret_cast<char*>(&program_number), sizeof(char));
-
-						new_event.value1 = program_number;
+						
+						new_event->value1 = program_number;
 						
 						break;
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
-					case 0xD0: { // Channel Aftertouch 
+					case 0xD0: { // Channel Aftertouch
+						MTR_SCOPE("TRACK READ", "Channel Aftertouch");
 						uint8_t amount;		// [0-127]
 						
 						midi_file.read(reinterpret_cast<char*>(&amount), sizeof(char));
 
-						new_event.value1 = amount;
+						new_event->value1 = amount;
 						
 						break;
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0xE0: { // Pitch Bend
+						MTR_SCOPE("TRACK READ", "Pitch Bend");
 						uint8_t LSB;		// [0-127]
 						uint8_t MSB;		// [0-127]
 						
 						midi_file.read(reinterpret_cast<char*>(&LSB), sizeof(char));
 						midi_file.read(reinterpret_cast<char*>(&MSB), sizeof(char));
 						
-						new_event.value1 = LSB;
-						new_event.value2 = MSB;
+						new_event->value1 = LSB;
+						new_event->value2 = MSB;
 						
 						break;
 					}
@@ -463,42 +497,44 @@ namespace MIDI {
 						debug::printf("This Event is undefined: %x\n", event);
 					} 
 				}
-				
-				new_track.events[new_event.name].push_back(new_event);
+				{
+					MTR_SCOPE("TRACK READ", "Event Save");
+					new_track->events[new_event->name].push_back(new_event);					
+				}
 			}
 		}
 		
 		////////////////////////////////////////////////////////////
 		////                FINALIZING TRACK                    ////
 		////////////////////////////////////////////////////////////
-		if(new_track.meta_events.contains("Track Name")) {
-			new_track.name = new_track.meta_events["Track Name"][0].text;
+		if(new_track->meta_events.contains("Track Name")) {
+			new_track->name = new_track->meta_events["Track Name"][0]->text;
 		}
 		
 		// Sorting by time
-		// for(auto& [event_name, events] : new_track.events) {
-		// 	std::sort(
-		// 		events.begin(), events.end(),
-		//		[](const MIDI_Event& A, const MIDI_Event& B) {
-		// 			return A.time < B.time;
-		// 		}
-		// 	);
-		// }
+		for(auto& events : new_track->events | std::views::values) {
+			std::ranges::sort(
+				events,
+				[](const std::shared_ptr<MIDI_Event>& A, const std::shared_ptr<MIDI_Event>& B) {
+				  return A->time < B->time;
+				}
+			);
+		}
 		
 		// Sorting by time
-		// for(auto& [event_name, events] : new_track.meta_events) {
-		// 	std::sort(
-		// 		events.begin(), events.end(),
-		// 		[](const MetaEvent& A, const MetaEvent& B) {
-		// 			return A.time < B.time;
-		// 		}
-		// 	);
-		// }
+		for(auto& events : new_track->meta_events | std::views::values) {
+			std::ranges::sort(
+				events,
+				[](const std::shared_ptr<MetaEvent>& A, const std::shared_ptr<MetaEvent>& B) {
+				  return A->time < B->time;
+				}
+			);
+		}
 		
 		////////////////////////////////////////////////////////////
-
-		printf("Track %s is Done loading!\n\n", new_track.name.c_str());
-
+		
+		debug::printf("Track %s is Done loading! Waiting for mutex.\n\n", new_track->name.c_str());
+		MTR_SCOPE("Track Read", "MUTEX UNLOCK");
 		std::lock_guard guard(g_track_write_mutex);
 		parsed_midi.tracks.push_back(new_track);
 	}
@@ -506,25 +542,30 @@ namespace MIDI {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	bool Read(char* file_path) {
-		// std::ifstream midi_file(file_path, std::ifstream::binary | std::ios::ate);
-		// if(!midi_file.good()){
-		// 	return false;
-		// }
-		// const std::streamsize size = midi_file.tellg(); // By getting the position we get the size in bytes.
-		// char* midi_cache = new char[size];
-		// midi_file.seekg(0, std::ios::beg); // Go back to the start for reading.
-		// if (!midi_file.read(midi_cache, size)) { // Read into our buffer variable.
-		// 	debug::printf("Failed to cache Midi file into memory\n");
-		// 	delete[] midi_cache;
-		// 	return false;
-		// }
-		// midi_file.seekg(0, std::ios::beg);
+		mtr_init("trace.json");
+		MTR_META_PROCESS_NAME("MIDI Read");
+		MTR_META_THREAD_NAME("[MIDI Read] Main Thread");
+		MTR_BEGIN_FUNC();
 		
+		// midi parsed_midi;
+		std::ifstream midi_file(file_path, std::ifstream::binary | std::ios::ate);
+		if(!midi_file.good()){
+			return false;
+		}
+		const std::streamsize size = midi_file.tellg();
+		char* buf = new char[size];
+		midi_file.seekg(0, std::ios::beg);
+		if (midi_file.read(buf, size).fail()) {
+			debug::printf("Failed to cache Midi file into memory\n");
+			return false;
+		}
+		
+		midi_file.close();
 		
 		// Caching the file into memory.
 		// std::ostringstream buf;
 		// buf << midi_file.rdbuf();
-		// std::string str = buf.str();
+		// parsed_midi.raw_data = buf.str();
 		
 		
 		// std::filebuf*         midi_buf         = midi_file.rdbuf();
@@ -563,21 +604,25 @@ namespace MIDI {
 		//////////////////////////////////////////
 		////            HEADER PART           ////
 		//////////////////////////////////////////
-	
+		
+		const auto t1 = std::chrono::high_resolution_clock::now();
 		{
+			MTR_SCOPE("MIDI", "HEADER PARSE");
+			
 			std::ifstream midi_file(file_path, std::ifstream::binary);
 			if(!midi_file.good()){
 				return false;
 			}
 			
 			// Checking if it's a MIDI file
-			midi_file.read(midi_header.chunk_ID, sizeof(char) * 4);
-			midi_header.chunk_ID[4] = '\0';
-			if(strcmp(midi_header.chunk_ID, "MThd") != 0) {
+			char MIDI_ID[5];
+			midi_file.read(MIDI_ID, sizeof(char) * 4);
+			MIDI_ID[4] = '\0';
+			if(strcmp(MIDI_ID, "MThd") != 0) {
 				debug::printf("The file is not a midi.\n");
 				return false;
 			}
-			debug::printf("Header ID: %s\n", midi_header.chunk_ID);
+			debug::printf("Is a MIDI file.");
 		
 			//////////////////////////////////////////
 
@@ -625,7 +670,6 @@ namespace MIDI {
 		debug::printf("\n=======================\nTracks\n=======================\n\n");
 		
 		parsed_midi.name = found_file_name;
-
 		{
 			std::vector<std::unique_ptr<std::jthread>> threads;
 			
@@ -635,15 +679,21 @@ namespace MIDI {
 					file_path, track_index
 				));
 			}
+			// threads.push_back(std::make_unique<std::jthread>(
+			// 	worker_TrackRead,
+			// 	file_path, 3
+			// ));
 		
 			for(const auto& thread : threads) {
 				thread->join();
 			}
 		}
+		const auto t2 = std::chrono::high_resolution_clock::now();
 		
 		debug::printf("=====================\n");
 		debug::printf("MIDI loading is Done!\n");
 		debug::printf("=====================\n");
+		debug::printf("The loading took %f ms\n", std::chrono::duration<double, std::milli>(t2 - t1).count());
 		
 		#ifdef _DEBUG
 		// for(Track& track : parsed_midi.tracks) {
@@ -658,7 +708,9 @@ namespace MIDI {
 		// 	}
 		// }
 		#endif
-		
+
+		MTR_END_FUNC();
+		mtr_shutdown();
 		return true;
 	}
 }

@@ -32,7 +32,9 @@
     <ClCompile Include="libs\imgui\main_demo.cpp" />
     <ClCompile Include="src\CORE\core.cpp" />
     <ClCompile Include="src\CORE\helpers.cpp" />
+    <ClCompile Include="src\CORE\instrumentor.cpp" />
     <ClCompile Include="src\CORE\midi.cpp" />
+    <ClCompile Include="src\CORE\minitrace.cpp" />
     <ClCompile Include="src\CORE\victor.cpp" />
     <ClCompile Include="src\GUI\gui.cpp" />
     <ClCompile Include="src\GUI\viewport.cpp" />
@@ -204,7 +206,9 @@
     <ClInclude Include="libs\stb\stb_image.h" />
     <ClInclude Include="src\CORE\core.h" />
     <ClInclude Include="src\CORE\helpers.h" />
+    <ClInclude Include="src\CORE\instrumentor.h" />
     <ClInclude Include="src\CORE\midi.h" />
+    <ClInclude Include="src\CORE\minitrace.h" />
     <ClInclude Include="src\CORE\victor.h" />
     <ClInclude Include="src\GUI\gui.h" />
     <ClInclude Include="src\GUI\viewport.h" />
@@ -242,15 +246,20 @@
     <Content Include="libs\SDL_image\lib\x86\optional\LICENSE.webp.txt" />
     <Content Include="libs\SDL_image\lib\x86\SDL2_image.dll" />
     <Content Include="libs\SDL_image\lib\x86\SDL2_image.lib" />
+    <Content Include="res\Pi.mid" />
     <Content Include="res\place_holder.png" />
+    <Content Include="res\Scatman's-World.mid" />
+    <Content Include="res\SEMBELLO.Maniac.mid" />
     <Content Include="res\test_type0.mid" />
     <Content Include="res\test_type0_NoteAtStart.mid" />
     <Content Include="res\test_type0_NoteAtStart_2.mid" />
     <Content Include="res\test_type0_NoteAtStart_andEnd.mid" />
     <Content Include="res\test_type0_NoteAtStart_Offset.mid" />
     <Content Include="res\test_type0_spaced.mid" />
+    <Content Include="res\test_type0_spaced_CH2.MID" />
     <Content Include="res\test_type1.mid" />
     <Content Include="res\test_type1_MultiTrack.mid" />
+    <Content Include="res\test_type1_MultiTrack_names.mid" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="libs\imgui\imgui.natvis" />
@@ -347,7 +356,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>DEBUG_IMGLIB;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_IMGLIB;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);__MTR_ENABLED</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
