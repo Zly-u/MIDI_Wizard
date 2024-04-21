@@ -225,8 +225,6 @@ namespace MIDI {
 						midi_file.read(reinterpret_cast<char*>(&MSB), sizeof(char));
 						midi_file.read(reinterpret_cast<char*>(&LSB), sizeof(char));
 						
-						// read_pos += 3;
-						
 						break;
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
@@ -497,8 +495,10 @@ namespace MIDI {
 						debug::printf("This Event is undefined: %x\n", event);
 					} 
 				}
+				
 				{
 					MTR_SCOPE("TRACK READ", "Event Save");
+					new_track->channel = new_event->channel;
 					new_track->events[new_event->name].push_back(new_event);					
 				}
 			}
@@ -694,6 +694,10 @@ namespace MIDI {
 		debug::printf("MIDI loading is Done!\n");
 		debug::printf("=====================\n");
 		debug::printf("The loading took %f ms\n", std::chrono::duration<double, std::milli>(t2 - t1).count());
+
+		for(auto& track : parsed_midi.tracks) {
+			debug::printf("Channel %d\n", track->channel);
+		}
 		
 		#ifdef _DEBUG
 		// for(Track& track : parsed_midi.tracks) {

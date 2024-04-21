@@ -30,6 +30,7 @@ namespace gui {
 		static bool dock_is_open	= true;
 		static bool opt_fullscreen	= true;
 		static bool opt_padding		= false; // Removes padding for all the child windows
+
 		
 		ImGuiDockNodeFlags dockspace_flags =
 			// ImGuiDockNodeFlags_HiddenTabBar |
@@ -140,18 +141,21 @@ namespace gui {
 
 	void DrawUI()
 	{
+		// SDL Viewport rendering
+
 		// Made pre and post for ease of coding graphics
 		midi_viewport->PreDraw();
 		midi_viewport->Draw();
 		midi_viewport->PostDraw();
 
-		
+
+		// ImGUI part
 		if (show_demo_window) {
 			ImGui::ShowDemoWindow(&show_demo_window);
 		}
 
 		SetupDocking();
-		
+				
 		if (ImGui::BeginMainMenuBar())
 		{
 			if (ImGui::BeginMenu("File"))

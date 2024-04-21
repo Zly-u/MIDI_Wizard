@@ -21,7 +21,7 @@
 #endif
 
 // Main code
-int main_demo(int, char**)
+int ___main(int, char**)
 {
     // Setup SDL
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
@@ -36,10 +36,7 @@ int main_demo(int, char**)
 #endif
 
     // Create window with SDL_Renderer graphics context
-    constexpr SDL_WindowFlags window_flags = static_cast<SDL_WindowFlags>(
-    	SDL_WINDOW_RESIZABLE |
-    	SDL_WINDOW_ALLOW_HIGHDPI
-    );
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
     if (window == nullptr)
     {

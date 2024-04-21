@@ -67,9 +67,9 @@ struct Note {
 };
 
 struct SysExEvent {
-	uint8_t     type = 0;
-	uint64_t    time   = 0;
-	uint64_t    packet = 0;
+	uint8_t     type	= 0;
+	uint64_t    time	= 0;
+	uint64_t    packet	= 0;
 	
 	std::string name;
 };
@@ -92,7 +92,7 @@ struct MetaEvent {
 struct MIDI_Event {
 	uint8_t  type    = 0;
 	uint64_t time    = 0;
-	uint64_t channel = 0;
+	uint8_t	 channel = 0;
 
 	uint64_t value1 = 0;
 	uint64_t value2 = 0;
@@ -106,7 +106,7 @@ struct Track {
 	
 	std::string name;
 
-	uint8_t channel = 0;
+	int8_t channel = -1;
 
 	std::map<
 		std::string,

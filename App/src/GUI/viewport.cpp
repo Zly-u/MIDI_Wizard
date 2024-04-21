@@ -75,15 +75,13 @@ void viewport::DrawUI() {
 	constexpr ImGuiWindowFlags MIDI_UI_FLAGS =
 		ImGuiWindowFlags_NoCollapse;
 	
-	//BUG: Fix minimizing crashing the program
 	if(MIDI_UI_OPEN) {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 	}
+	
 	if(ImGui::Begin("MIDI Viewport", &MIDI_UI_OPEN, MIDI_UI_FLAGS))
 	{
-		ImGui::PopStyleVar();
 		//TODO: Viewport renderer
-			
 		ImGui::Image(
 			viewport_tex_ptr,
 			ImVec2(
@@ -91,5 +89,9 @@ void viewport::DrawUI() {
 				ImGui::GetCurrentWindow()->Size.y - ImGui::GetCurrentWindow()->TitleBarHeight()
 			)
 		);
-	} /* END Window MIDI Viewport */ ImGui::End();
+	} ImGui::End(); /* END Window MIDI Viewport */
+	
+	if(MIDI_UI_OPEN) {
+		ImGui::PopStyleVar();
+	}
 }
