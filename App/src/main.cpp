@@ -1,6 +1,5 @@
 #include <cstdio>
 
-#include "core.h"
 #include "window_handler.h"
 #include "gui.h"
 #include "midi.h"
@@ -54,6 +53,8 @@ int main(int /*argc*/, char** /*argv*/){
         	}
         }
 
+    	gui::Update();
+    	
     	// Start the ImGui frame
 		ImGui_ImplSDLRenderer2_NewFrame();
     	ImGui_ImplSDL2_NewFrame();
@@ -81,6 +82,8 @@ int main(int /*argc*/, char** /*argv*/){
 
     	// Display all drawn contents from the backbuffer
     	SDL_RenderPresent(WindowHandler.SDL_Renderer_ptr);
+
+    	SDL_Delay(16);
     }
 
 	printf("\nCLEANING UP\n\n");

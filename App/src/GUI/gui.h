@@ -28,6 +28,7 @@ namespace gui
 	
 	void Init(SDL_Renderer* renderer);
 	void SetupDocking();
+	void Update();
 	void DrawUI();
 	void Render();
 	void Cleanup();

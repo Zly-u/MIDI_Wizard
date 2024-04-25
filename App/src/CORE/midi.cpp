@@ -6,10 +6,14 @@
 #include <stop_token>
 #include <thread>
 #include <chrono>
+#include <mutex>
 #include <ranges>
+#include <print>
 
+#include "core_globals.h"
 #include "helpers.h"
-#include "minitrace.h"
+#include "libs/minitrace.h"
+
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +47,9 @@ struct TrackParsedData {
 	EventsData events;
 };
 
-static midi parsed_midi;
+namespace {
+	midi parsed_midi;
+}
 
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
@@ -140,21 +146,10 @@ namespace MIDI {
 		uint8_t	 currently_skipped_track = 0;
 
 		while(currently_skipped_track < track_index){
-			// debug::printf("[Track %d] Skipped track %d\n", track_index, currently_skipped_track);
 			
 			if(stop_token.stop_requested()) {
 				return;
 			}
-			
-			// Reading track's header
-			// midi_file.read(track_chunk_ID, sizeof(char) * 4);
-			// track_chunk_ID[4] = '\0';
-			//
-			// if(strcmp(track_chunk_ID, "MTrk") != 0) {
-			// 	debug::printf("[Track %d] not MTrk: %s\n", track_index, track_chunk_ID);
-			// 	assert(false && "There is no track or MIDI is corrupted.\n");
-			// 	return;
-			// }
 			
 			// Skip the track label
 			midi_file.ignore(4);
@@ -187,8 +182,8 @@ namespace MIDI {
 			MTR_SCOPE("Track Read", "EVENT VECTORS RESERVE");
 			// Reseves vector sizes to the approximate size for the midi.
 			const uint64_t to_reserve = track_chunk_size/5;
-			new_track->events[event_names[0x80]].reserve(to_reserve);
-			new_track->events[event_names[0x90]].reserve(to_reserve);
+			new_track->events[globals::event_names.at(0x80)].reserve(to_reserve);
+			new_track->events[globals::event_names.at(0x90)].reserve(to_reserve);
 		}
 		
 		// Start Events reading loop
@@ -213,7 +208,7 @@ namespace MIDI {
 				
 				std::shared_ptr<MetaEvent> new_meta_event = std::make_shared<MetaEvent>();
 				new_meta_event->type = meta_event_type;
-				new_meta_event->name = meta_event_names[meta_event_type];
+				new_meta_event->name = globals::meta_event_names.at(meta_event_type);
 				new_meta_event->time = absolute_time;
 				
 				switch(meta_event_type) {
@@ -353,7 +348,7 @@ namespace MIDI {
 				
 				std::shared_ptr<MIDI_Event> new_event = std::make_shared<MIDI_Event>();
 				new_event->type    = event;
-				new_event->name    = event_names[event & 0xF0];
+				new_event->name    = globals::event_names.at(event & 0xF0);
 				new_event->time    = absolute_time;
 				new_event->channel = event & 0x0F; // Channel: [0-15]
 				
@@ -694,21 +689,20 @@ namespace MIDI {
 		debug::printf("MIDI loading is Done!\n");
 		debug::printf("=====================\n");
 		debug::printf("The loading took %f ms\n", std::chrono::duration<double, std::milli>(t2 - t1).count());
-
-		for(auto& track : parsed_midi.tracks) {
-			debug::printf("Channel %d\n", track->channel);
-		}
 		
 		#ifdef _DEBUG
-		// for(Track& track : parsed_midi.tracks) {
-		// 	debug::printf("Track's name: %s\n", track.name.c_str());
-		// 	for(const MIDI_Event& note : track.events["Note ON"]) {
-		// 		const long double note_time = convert_dt_to_ms(
-		// 			note.time,
-		// 			track.meta_events["Set Tempo"][0].value1,
-		// 			midi_header.time_division
-		// 		); 
-		// 		debug::printf("\tHas note %s at %llu\n", note_names[note.value1 % 12], note_time);
+		// for(auto& track : parsed_midi.tracks) {
+		// 	debug::printf("Channel %d\n", track->channel);
+		// }
+		// for(auto& track : parsed_midi.tracks) {
+		// 	debug::print("Track's name: {}", track->name.c_str());
+		// 	for(const auto& note : track->events["Note ON"]) {
+		// 		// const long double note_time = convert_dt_to_ms(
+		// 		// 	note->time,
+		// 		// 	track->meta_events["Set Tempo"][0]->value1,
+		// 		// 	midi_header.time_division
+		// 		// );
+		// 		debug::print("\tHas note {} at {}", globals::note_names[note->value1 % 12], note->time);
 		// 	}
 		// }
 		#endif

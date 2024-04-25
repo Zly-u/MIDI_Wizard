@@ -1,5 +1,8 @@
 ﻿#pragma once
+
+#ifdef _DEBUG
 #include <cstdio>
+#endif
 
 namespace debug {
 	inline void printf(const char* format...) {

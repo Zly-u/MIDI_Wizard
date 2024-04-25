@@ -6,7 +6,7 @@
 #include <SDL.h>
 
 
-
+// Window Singleton
 class window_handler {
 public:
 	// SDL

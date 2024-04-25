@@ -24,8 +24,7 @@ namespace gui {
 		// ImGui::StyleColorsDark();
 		// ImGui::StyleColorsLight();
 	}
-
-
+	
 	void SetupDocking() {
 		static bool dock_is_open	= true;
 		static bool opt_fullscreen	= true;
@@ -137,7 +136,11 @@ namespace gui {
 		 //    }	ImGui::EndMenuBar();
 		} ImGui::End(); /* Dockspace */
 	}
+
 	
+	void Update() {
+		midi_viewport->Update(1.f/60.f);
+	}
 
 	void DrawUI()
 	{

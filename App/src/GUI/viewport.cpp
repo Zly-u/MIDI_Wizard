@@ -7,6 +7,7 @@
 #include "imgui_internal.h"
 #include "SDL_image.h"
 #include "SDL_render.h"
+#include "UI_Element_midi_note.h"
 
 
 viewport::viewport(SDL_Renderer* renderer)
@@ -42,16 +43,27 @@ void viewport::PreDraw() {
 	// We set our render target (our viewport texture)
 	// into which we are gonna draw into
 	SDL_SetRenderTarget(main_renderer, viewport_tex_ptr);
+
+	SDL_SetRenderDrawColor(main_renderer, 255, 0, 255, 255);
+	SDL_RenderClear(main_renderer);
+	
+	OnStart();
+}
+
+void viewport::OnStart() {
+	const std::shared_ptr<Object> note = std::make_shared<UI_Element_midi_note>(50, 50);
+	objects.push_back(note);
+}
+
+void viewport::Update(float dt) {
+	for(const auto& obj : objects) {
+		obj->Update(dt);
+	}
 }
 
 void viewport::Draw() {
 	if(!main_renderer){ return; }
 	if(!viewport_tex_ptr){ return; }
-
-	SDL_RenderClear(main_renderer);
-	
-	SDL_SetRenderDrawColor(main_renderer, 255, 0, 255, 255);
-	SDL_RenderPresent(main_renderer);
 	
 	SDL_Rect rect{0, 0, width, height};
 	SDL_RenderCopy(
@@ -60,12 +72,17 @@ void viewport::Draw() {
 		nullptr,
 		&rect
 	);
-	SDL_RenderPresent(main_renderer);
+	
+	for(const auto& obj : objects) {
+		obj->Draw(main_renderer);
+	}
 }
 
 void viewport::PostDraw() {
 	if(!main_renderer){ return; }
 	if(!viewport_tex_ptr){ return; }
+
+	SDL_RenderPresent(main_renderer); // Render the backbuffer
 	
 	SDL_SetRenderTarget(main_renderer, nullptr); // Stop using render target
 }
