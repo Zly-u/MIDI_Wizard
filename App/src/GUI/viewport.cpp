@@ -1,8 +1,8 @@
 ﻿#include "viewport.h"
 
 #include <cassert>
-#include <cstdio>
 
+#include "helpers.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "SDL_image.h"
@@ -24,10 +24,12 @@ viewport::viewport(SDL_Renderer* renderer)
 	// Load some texture into our viewport render target
 	tex_placeholder	= IMG_LoadTexture(main_renderer, "res/place_holder.png");
 	assert(tex_placeholder != nullptr);
+
+	OnStart();
 }
 
 viewport::~viewport() {
-	printf("viewport deconstructed\n");
+	debug::printf("viewport deconstructed\n");
 	if (viewport_tex_ptr) {
 		SDL_DestroyTexture(viewport_tex_ptr);
 	}
@@ -35,6 +37,22 @@ viewport::~viewport() {
 		SDL_DestroyTexture(tex_placeholder);
 	}
 }
+
+
+void viewport::OnStart() {
+	const std::shared_ptr<Object> note = std::make_shared<UI_Element_midi_note>(50, 50);
+	objects.push_back(note);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+void viewport::Update(float dt) {
+	for(const auto& obj : objects) {
+		obj->Update(dt);
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 
 void viewport::PreDraw() {
 	if(!main_renderer){ return; }
@@ -46,19 +64,6 @@ void viewport::PreDraw() {
 
 	SDL_SetRenderDrawColor(main_renderer, 255, 0, 255, 255);
 	SDL_RenderClear(main_renderer);
-	
-	OnStart();
-}
-
-void viewport::OnStart() {
-	const std::shared_ptr<Object> note = std::make_shared<UI_Element_midi_note>(50, 50);
-	objects.push_back(note);
-}
-
-void viewport::Update(float dt) {
-	for(const auto& obj : objects) {
-		obj->Update(dt);
-	}
 }
 
 void viewport::Draw() {
@@ -86,6 +91,8 @@ void viewport::PostDraw() {
 	
 	SDL_SetRenderTarget(main_renderer, nullptr); // Stop using render target
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 void viewport::DrawUI() {
 	bool MIDI_UI_OPEN = true;
