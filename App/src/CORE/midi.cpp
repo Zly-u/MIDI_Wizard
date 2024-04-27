@@ -12,7 +12,6 @@
 
 #include "core_globals.h"
 #include "helpers.h"
-#include "libs/minitrace.h"
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -179,7 +178,7 @@ namespace MIDI {
 		debug::printf("Track chunk size: %u\n", track_chunk_size);
 
 		{
-			MTR_SCOPE("Track Read", "EVENT VECTORS RESERVE");
+			// MTR_SCOPE("Track Read", "EVENT VECTORS RESERVE");
 			// Reseves vector sizes to the approximate size for the midi.
 			const uint64_t to_reserve = track_chunk_size/5;
 			new_track->events[globals::event_names.at(0x80)].reserve(to_reserve);
@@ -326,7 +325,7 @@ namespace MIDI {
 					} 
 				}
 
-				MTR_SCOPE("MIDI Events", "META EVENT SAVE");
+				// MTR_SCOPE("MIDI Events", "META EVENT SAVE");
 				new_track->meta_events[new_meta_event->name].push_back(new_meta_event);
 			}
 			else if ((event & 0xF0) == 0xF0) // Sys Ex events
@@ -344,7 +343,7 @@ namespace MIDI {
 			}
 			else // MIDI events
 			{
-				MTR_SCOPE("MIDI Events", "EVENT READ");
+				// MTR_SCOPE("MIDI Events", "EVENT READ");
 				
 				std::shared_ptr<MIDI_Event> new_event = std::make_shared<MIDI_Event>();
 				new_event->type    = event;
@@ -354,7 +353,7 @@ namespace MIDI {
 				
 				switch(event & 0xF0) {
 					case 0x80: { // Note OFF
-						MTR_SCOPE("MIDI Events", "Note OFF");
+						// MTR_SCOPE("MIDI Events", "Note OFF");
 						uint8_t note;		// [0-127]
 						uint8_t vel;		// [0-127]
 
@@ -368,7 +367,7 @@ namespace MIDI {
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0x90: { // Note ON
-						MTR_SCOPE("MIDI Events", "Note ON");
+						// MTR_SCOPE("MIDI Events", "Note ON");
 						uint8_t note;		// [0-127]
 						uint8_t vel;		// [0-127]
 						
@@ -382,7 +381,7 @@ namespace MIDI {
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0xA0: { // Note Aftertouch
-						MTR_SCOPE("TRACK READ", "Note Aftertouch");
+						// MTR_SCOPE("TRACK READ", "Note Aftertouch");
 						uint8_t note;		// [0-127]
 						uint8_t amount;		// [0-127]
 						
@@ -396,7 +395,7 @@ namespace MIDI {
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0xB0: { // Controller
-						MTR_SCOPE("TRACK READ", "Controller");
+						// MTR_SCOPE("TRACK READ", "Controller");
 						/*	CONTROLLER TYPES: 
 							0		(0x00) 			Bank Select
 							1		(0x01) 			Modulation
@@ -451,7 +450,7 @@ namespace MIDI {
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0xC0: { // Program Change
-						MTR_SCOPE("TRACK READ", "Program Change");
+						// MTR_SCOPE("TRACK READ", "Program Change");
 						uint8_t program_number;	// [0-127]
 						
 						midi_file.read(reinterpret_cast<char*>(&program_number), sizeof(char));
@@ -462,7 +461,7 @@ namespace MIDI {
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0xD0: { // Channel Aftertouch
-						MTR_SCOPE("TRACK READ", "Channel Aftertouch");
+						// MTR_SCOPE("TRACK READ", "Channel Aftertouch");
 						uint8_t amount;		// [0-127]
 						
 						midi_file.read(reinterpret_cast<char*>(&amount), sizeof(char));
@@ -473,7 +472,7 @@ namespace MIDI {
 					}
 					////////////////////////////////////////////////////////////////////////////////////////////////
 					case 0xE0: { // Pitch Bend
-						MTR_SCOPE("TRACK READ", "Pitch Bend");
+						// MTR_SCOPE("TRACK READ", "Pitch Bend");
 						uint8_t LSB;		// [0-127]
 						uint8_t MSB;		// [0-127]
 						
@@ -492,7 +491,7 @@ namespace MIDI {
 				}
 				
 				{
-					MTR_SCOPE("TRACK READ", "Event Save");
+					// MTR_SCOPE("TRACK READ", "Event Save");
 					new_track->channel = new_event->channel;
 					new_track->events[new_event->name].push_back(new_event);					
 				}
@@ -529,7 +528,7 @@ namespace MIDI {
 		////////////////////////////////////////////////////////////
 		
 		debug::printf("Track %s is Done loading! Waiting for mutex.\n\n", new_track->name.c_str());
-		MTR_SCOPE("Track Read", "MUTEX UNLOCK");
+		// MTR_SCOPE("Track Read", "MUTEX UNLOCK");
 		std::lock_guard guard(g_track_write_mutex);
 		parsed_midi.tracks.push_back(new_track);
 	}
@@ -537,10 +536,10 @@ namespace MIDI {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	bool Read(char* file_path) {
-		mtr_init("trace.json");
-		MTR_META_PROCESS_NAME("MIDI Read");
-		MTR_META_THREAD_NAME("[MIDI Read] Main Thread");
-		MTR_BEGIN_FUNC();
+		// mtr_init("trace.json");
+		// MTR_META_PROCESS_NAME("MIDI Read");
+		// MTR_META_THREAD_NAME("[MIDI Read] Main Thread");
+		// MTR_BEGIN_FUNC();
 		
 		// midi parsed_midi;
 		std::ifstream midi_file(file_path, std::ifstream::binary | std::ios::ate);
@@ -602,7 +601,7 @@ namespace MIDI {
 		
 		const auto t1 = std::chrono::high_resolution_clock::now();
 		{
-			MTR_SCOPE("MIDI", "HEADER PARSE");
+			// MTR_SCOPE("MIDI", "HEADER PARSE");
 			
 			std::ifstream midi_file(file_path, std::ifstream::binary);
 			if(!midi_file.good()){
@@ -707,8 +706,8 @@ namespace MIDI {
 		// }
 		#endif
 
-		MTR_END_FUNC();
-		mtr_shutdown();
+		// MTR_END_FUNC();
+		// mtr_shutdown();
 		return true;
 	}
 }

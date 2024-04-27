@@ -10,7 +10,7 @@ int main(int /*argc*/, char** /*argv*/){
 		return ws_result;
 	}
 	
-	gui::Init(MainWindow::Get_SDLRenderer());
+	GUI::Init(MainWindow::Get_SDLRenderer());
 	
 	constexpr ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -50,7 +50,7 @@ int main(int /*argc*/, char** /*argv*/){
         	}
         }
 
-    	gui::Update();
+    	GUI::Update();
     	
     	// Start the ImGui frame
 		ImGui_ImplSDLRenderer2_NewFrame();
@@ -58,8 +58,8 @@ int main(int /*argc*/, char** /*argv*/){
     	ImGui::NewFrame();
 
     	// Draw in frame
-    	gui::DrawUI();
-    	gui::Render();
+    	GUI::Draw();
+    	GUI::Render();
 
     	// End frame
     	SDL_RenderSetScale(
@@ -84,8 +84,6 @@ int main(int /*argc*/, char** /*argv*/){
     }
 
 	printf("\nCLEANING UP\n\n");
-	
-	gui::Cleanup();
 	
     return 0;
 }

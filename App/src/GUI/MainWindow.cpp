@@ -25,7 +25,7 @@ struct WindowSettings
 	// | ImGuiConfigFlags_ViewportsNoMerge;
 };
 
-int MainWindow::WindowSetupImpl(){
+int MainWindow::WindowSetup_Impl(){
 	constexpr Uint32 SDL_INIT_FLAGS =
 		SDL_INIT_VIDEO |
 		SDL_INIT_TIMER |
@@ -71,7 +71,7 @@ int MainWindow::WindowSetupImpl(){
 	constexpr Uint32 MAIN_RENDERER_FLAGS = SDL_RENDERER_ACCELERATED;
 	SDL_Renderer_ptr = SDL_CreateRenderer(SDL_Window_ptr, -1, MAIN_RENDERER_FLAGS);
 	if(!SDL_Renderer_ptr) {
-		CleanupImpl();
+		CleanUp_Impl();
 		printf("Error: SDL_CreateRenderer(): %s\n", SDL_GetError());
 		return -1;
 	}
@@ -94,7 +94,7 @@ int MainWindow::WindowSetupImpl(){
 }
 
 // TODO: texture destroying
-void MainWindow::CleanupImpl(){
+void MainWindow::CleanUp_Impl(){
 	if(SDL_Renderer_ptr) {
 		SDL_DestroyRenderer(SDL_Renderer_ptr);
 	}

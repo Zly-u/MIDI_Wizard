@@ -4,7 +4,7 @@
 class Object {
 
 public:
-	Object(float _x, float _y, float w, float h) : rect(_x, _y, w, h) {
+	Object(float _x, float _y, float w, float h) : rect((int)_x, (int)_y, (int)w, (int)h) {
 	}
 	Object() : Object(0, 0, 32, 32) {}
 	

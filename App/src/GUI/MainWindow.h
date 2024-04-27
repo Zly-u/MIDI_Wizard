@@ -15,7 +15,7 @@ public:
 	
 public:
 	~MainWindow() {
-		CleanupImpl();
+		CleanUp_Impl();
 	}
 	
 	static MainWindow& Get() {
@@ -24,8 +24,12 @@ public:
 	}
 
 	static int WindowSetup() {
-		return Get().WindowSetupImpl();
+		return Get().WindowSetup_Impl();
 	}
+
+	static void CleanUp() {
+    	return Get().CleanUp_Impl();
+    }
 
 	// SDL Getters
 	
@@ -52,8 +56,8 @@ private:
 		ImIO_ptr(nullptr)
 	{}
 	
-	int  WindowSetupImpl();
-	void CleanupImpl();
+	int  WindowSetup_Impl();
+	void CleanUp_Impl();
 
 
 private:
