@@ -1,4 +1,4 @@
-﻿#include "window_handler.h"
+﻿#include "MainWindow.h"
 
 #include <cstdio>
 #include <cstdlib>         // abort
@@ -25,15 +25,7 @@ struct WindowSettings
 	// | ImGuiConfigFlags_ViewportsNoMerge;
 };
 
-
-window_handler::window_handler() :
-	ImIO_ptr(nullptr),
-	SDL_Window_ptr(nullptr)
-{}
-
-
-
-int window_handler::WindowSetup(){
+int MainWindow::WindowSetupImpl(){
 	constexpr Uint32 SDL_INIT_FLAGS =
 		SDL_INIT_VIDEO |
 		SDL_INIT_TIMER |
@@ -79,7 +71,7 @@ int window_handler::WindowSetup(){
 	constexpr Uint32 MAIN_RENDERER_FLAGS = SDL_RENDERER_ACCELERATED;
 	SDL_Renderer_ptr = SDL_CreateRenderer(SDL_Window_ptr, -1, MAIN_RENDERER_FLAGS);
 	if(!SDL_Renderer_ptr) {
-		Cleanup();
+		CleanupImpl();
 		printf("Error: SDL_CreateRenderer(): %s\n", SDL_GetError());
 		return -1;
 	}
@@ -102,7 +94,7 @@ int window_handler::WindowSetup(){
 }
 
 // TODO: texture destroying
-void window_handler::Cleanup(){
+void MainWindow::CleanupImpl(){
 	if(SDL_Renderer_ptr) {
 		SDL_DestroyRenderer(SDL_Renderer_ptr);
 	}

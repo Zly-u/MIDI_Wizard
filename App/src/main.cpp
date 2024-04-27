@@ -1,19 +1,16 @@
 #include <cstdio>
 
-#include "window_handler.h"
+#include "MainWindow.h"
 #include "gui.h"
 #include "midi.h"
 
 
 int main(int /*argc*/, char** /*argv*/){
-	// Window Singleton
-	window_handler WindowHandler;
-	const int ws_result = WindowHandler.WindowSetup();
-	if(ws_result != 0){
+	if(const int ws_result = MainWindow::WindowSetup() != 0){
 		return ws_result;
 	}
 	
-	gui::Init(WindowHandler.SDL_Renderer_ptr);
+	gui::Init(MainWindow::Get_SDLRenderer());
 	
 	constexpr ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -47,7 +44,7 @@ int main(int /*argc*/, char** /*argv*/){
         	
         	if (event.type == SDL_WINDOWEVENT &&
         		event.window.event == SDL_WINDOWEVENT_CLOSE &&
-        		event.window.windowID == SDL_GetWindowID(WindowHandler.SDL_Window_ptr)
+        		event.window.windowID == SDL_GetWindowID(MainWindow::Get_SDLWindow())
         	){
         		done = true;
         	}
@@ -66,22 +63,22 @@ int main(int /*argc*/, char** /*argv*/){
 
     	// End frame
     	SDL_RenderSetScale(
-    		WindowHandler.SDL_Renderer_ptr,
-    		WindowHandler.ImIO_ptr->DisplayFramebufferScale.x,
-    		WindowHandler.ImIO_ptr->DisplayFramebufferScale.y
+    		MainWindow::Get_SDLRenderer(),
+    		MainWindow::Get_ImGuiIO()->DisplayFramebufferScale.x,
+    		MainWindow::Get_ImGuiIO()->DisplayFramebufferScale.y
     	);
     	SDL_SetRenderDrawColor(
-    		WindowHandler.SDL_Renderer_ptr,
+    		MainWindow::Get_SDLRenderer(),
     		static_cast<Uint8>(clear_color.x * 255),
     		static_cast<Uint8>(clear_color.y * 255),
     		static_cast<Uint8>(clear_color.z * 255),
     		static_cast<Uint8>(clear_color.w * 255)
     	);
-    	SDL_RenderClear(WindowHandler.SDL_Renderer_ptr);
+    	SDL_RenderClear(MainWindow::Get_SDLRenderer());
     	ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
 
     	// Display all drawn contents from the backbuffer
-    	SDL_RenderPresent(WindowHandler.SDL_Renderer_ptr);
+    	SDL_RenderPresent(MainWindow::Get_SDLRenderer());
 
     	SDL_Delay(16);
     }
@@ -89,7 +86,6 @@ int main(int /*argc*/, char** /*argv*/){
 	printf("\nCLEANING UP\n\n");
 	
 	gui::Cleanup();
-	WindowHandler.Cleanup();
 	
     return 0;
 }

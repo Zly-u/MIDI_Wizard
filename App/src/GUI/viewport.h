@@ -1,9 +1,10 @@
 ﻿#pragma once
 
 #include <memory>
-#include <SDL_render.h>
 #include <vector>
 
+#include <SDL_render.h>
+#include "imgui.h"
 #include "UI_Element_midi_note.h"
 
 
@@ -29,6 +30,8 @@ public:
 	
 	int width  = -1;
 	int height = -1;
+
+	ImVec2 current_window_size{-1, -1};
 
 	// NOTE: `main_renderer` - prolly make it assignable by any passed target, so it behaves as an actual projectable viewport.
 	SDL_Renderer* main_renderer    = nullptr;

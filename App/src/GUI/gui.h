@@ -1,6 +1,5 @@
 #pragma once
 
-class  window_handler;
 struct SDL_Texture;
 struct SDL_Renderer;
 

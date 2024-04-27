@@ -113,7 +113,7 @@
     <ClCompile Include="src\GUI\Object.cpp" />
     <ClCompile Include="src\GUI\UI_Element_midi_note.cpp" />
     <ClCompile Include="src\GUI\viewport.cpp" />
-    <ClCompile Include="src\GUI\window_handler.cpp" />
+    <ClCompile Include="src\GUI\MainWindow.cpp" />
     <ClCompile Include="src\main.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -289,7 +289,7 @@
     <ClInclude Include="src\GUI\Object.h" />
     <ClInclude Include="src\GUI\UI_Element_midi_note.h" />
     <ClInclude Include="src\GUI\viewport.h" />
-    <ClInclude Include="src\GUI\window_handler.h" />
+    <ClInclude Include="src\GUI\MainWindow.h" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="libs\imgui\imgui.natstepfilter" />
