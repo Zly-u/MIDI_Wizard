@@ -105,11 +105,13 @@
       <AdditionalIncludeDirectories>;C:\vcpkg\installed\x64-windows\include;src\GUI;src\CORE;src\APP;libs\imgui;libs\SDL\include;libs\SDL_image\include;C:\vcpkg\installed\x64-windows\include</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
+    <ClCompile Include="src\CORE\libs\utils.cpp" />
     <ClCompile Include="src\CORE\midi.cpp" />
     <ClCompile Include="src\CORE\victor.cpp" />
     <ClCompile Include="src\GUI\gui.cpp" />
     <ClCompile Include="src\GUI\Object.cpp" />
     <ClCompile Include="src\GUI\UI_Element_midi_note.cpp" />
+    <ClCompile Include="src\GUI\UI_Element_midi_track.cpp" />
     <ClCompile Include="src\GUI\viewport.cpp" />
     <ClCompile Include="src\GUI\MainWindow.cpp" />
     <ClCompile Include="src\main.cpp">
@@ -281,11 +283,13 @@
     <ClInclude Include="src\CORE\core_globals.h" />
     <ClInclude Include="src\CORE\helpers.h" />
     <ClInclude Include="src\CORE\libs\minitrace.h" />
+    <ClInclude Include="src\CORE\libs\utils.h" />
     <ClInclude Include="src\CORE\midi.h" />
     <ClInclude Include="src\CORE\victor.h" />
     <ClInclude Include="src\GUI\gui.h" />
     <ClInclude Include="src\GUI\Object.h" />
     <ClInclude Include="src\GUI\UI_Element_midi_note.h" />
+    <ClInclude Include="src\GUI\UI_Element_midi_track.h" />
     <ClInclude Include="src\GUI\viewport.h" />
     <ClInclude Include="src\GUI\MainWindow.h" />
   </ItemGroup>

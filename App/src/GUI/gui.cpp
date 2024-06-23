@@ -13,9 +13,14 @@
 	
 void GUI::Init_Impl(SDL_Renderer* renderer) {
 	midi_viewport = std::make_unique<viewport>(renderer);
-
+	midi_viewport->OnStart();
+	
 	// ImGui::StyleColorsDark();
 	// ImGui::StyleColorsLight();
+}
+
+void GUI::UpdateMIDI_Impl() {
+	midi_viewport->UpdateMIDI();
 }
 
 void GUI::SetupDocking_Impl() {
@@ -132,13 +137,6 @@ void GUI::Update_Impl() {
 
 void GUI::Draw_Impl()
 {
-	// SDL Viewport rendering
-
-	// Made pre and post for ease of coding graphics
-	midi_viewport->PreDraw();
-	midi_viewport->Draw();
-	midi_viewport->PostDraw();
-
 	SetupDocking_Impl();
 
 	// ImGUI part
@@ -195,8 +193,13 @@ void GUI::Draw_Impl()
 	
 	///////////////////////////////////////
 	
-	midi_viewport->DrawUI();
-
+	midi_viewport->DrawWindow();
+	// SDL Viewport rendering
+	// Made pre and post for ease of coding graphics:tm:
+	midi_viewport->SDL_PreDraw();
+	midi_viewport->SDL_Draw();
+	midi_viewport->SDL_PostDraw();
+	
 	///////////////////////////////////////
 	
 	if(ImGui::Begin("MIDI Channels", &MIDI_UI_CHANNELS_OPEN, MidiChannels_UI_flags)) {

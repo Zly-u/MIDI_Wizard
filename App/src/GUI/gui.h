@@ -42,6 +42,9 @@ public:
 	static void Init(SDL_Renderer* renderer) {
 		Get().Init_Impl(renderer);
 	}
+	static void UpdateMIDI() {
+		Get().UpdateMIDI_Impl();
+	}
 	static void SetupDocking(){
 		Get().SetupDocking_Impl();
 	}
@@ -72,6 +75,7 @@ private:
 	GUI(){}
 	
 	void Init_Impl(SDL_Renderer* renderer);
+	void UpdateMIDI_Impl();
 	void SetupDocking_Impl();
 	void Update_Impl();
 	void Draw_Impl();

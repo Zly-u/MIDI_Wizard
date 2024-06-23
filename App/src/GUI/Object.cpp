@@ -1,15 +1,46 @@
 ﻿#include "Object.h"
 
-void Object::Draw(SDL_Renderer* renderer) {
-	SDL_SetRenderDrawColor(renderer, 0, 150, 255, 255);
-	SDL_RenderFillRect(renderer, &rect);
+////////////////////////////////////////////////////////////////////////
+
+void Object::UpdateEvents() {
+	
 }
 
 void Object::Update(float dt) {
-	IncrimentTime(dt);
+	m_time += dt;
+	
 }
 
-void Object::SetPos(const float inX, const float inY) {
-	rect.x = (int)inX;
-	rect.y = (int)inY;
+void Object::Draw() {
+	if(!GetRenderer()){ return; }
+	
+	SDL_SetRenderDrawColor(GetRenderer(), m_color.r, m_color.g, m_color.b, m_color.a);
+	
+	SDL_RenderFillRect(GetRenderer(), &m_rect);
 }
+
+////////////////////////////////////////////////////////////////////////
+
+void Object::SetPos(const float inX, const float inY) {
+	m_rect.x = (int)inX;
+	m_rect.y = (int)inY;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

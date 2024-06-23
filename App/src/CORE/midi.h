@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -60,6 +61,9 @@ struct MIDI_Event {
 
 struct Track {
 	Track() = default;
+	~Track() {
+		debug::printf("~Track(%s)", name.c_str());
+	}
 	
 	std::string name;
 
@@ -93,7 +97,13 @@ struct midi {
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 
-namespace MIDI {
-	void worker_TrackRead(const std::stop_token& stop_token, char* file_path, uint8_t track_index);
-	bool Read(char* file_path);
-}
+class MIDI {
+public:
+	static midi parsed_midi;
+	
+	static void worker_TrackRead(const std::stop_token& stop_token, char* file_path, uint8_t track_index);
+	static bool Read(char* file_path);
+
+private:
+	static std::mutex g_track_write_mutex;
+};

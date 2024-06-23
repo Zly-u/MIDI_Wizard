@@ -5,7 +5,7 @@
 #include "midi.h"
 
 
-int main(int /*argc*/, char** /*argv*/){
+int wmain(int /*argc*/, wchar_t** /*argv*/){
 	if(const int ws_result = MainWindow::WindowSetup() != 0){
 		return ws_result;
 	}
@@ -21,6 +21,7 @@ int main(int /*argc*/, char** /*argv*/){
 	// char test_mid[] = "res/SEMBELLO.Maniac.mid";
 	// char test_mid[] = "res/test_type0_spaced_CH2.MID";
 	MIDI::Read(test_mid);
+	GUI::UpdateMIDI();
 	
     // Main loop
     bool done = false;
