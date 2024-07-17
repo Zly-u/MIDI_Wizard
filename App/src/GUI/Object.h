@@ -1,15 +1,21 @@
 ﻿#pragma once
+
 #include "imgui.h"
 #include "SDL_render.h"
+
+
+
+
 
 class Object {
 
 public:
+	Object(){};
+	
 	Object(float _x, float _y, float w, float h) :
 		m_rect((int)_x, (int)_y, (int)w, (int)h),
 		m_init_rect(m_rect)
 	{}
-	Object() : Object(0, 0, 32, 32) {}
 	
 	virtual ~Object() = default;
 

@@ -1,4 +1,11 @@
-﻿#pragma once
+﻿// ReSharper disable CppClangTidyClangDiagnosticFloatConversion
+// ReSharper disable CppClangTidyBugproneNarrowingConversions
+// ReSharper disable CppObjectMemberMightNotBeInitialized
+
+#pragma warning(push)
+#pragma warning(disable:4244)
+
+#pragma once
 
 #include <cmath>
 
@@ -54,11 +61,13 @@ struct utils {
 			new_color = SDL_Color(C, 0, X);
 		}
 
-		new_color.r += (uint8_t)m;
-		new_color.g += (uint8_t)m;
-		new_color.b += (uint8_t)m;
+		new_color.r += static_cast<uint8_t>(m);
+		new_color.g += static_cast<uint8_t>(m);
+		new_color.b += static_cast<uint8_t>(m);
 		new_color.a = 255;
 		
 		return new_color;
 	}
 };
+
+#pragma warning(pop)

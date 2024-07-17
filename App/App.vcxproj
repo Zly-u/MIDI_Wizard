@@ -107,6 +107,7 @@
     </ClCompile>
     <ClCompile Include="src\CORE\libs\utils.cpp" />
     <ClCompile Include="src\CORE\midi.cpp" />
+    <ClCompile Include="src\CORE\ObjectManager.cpp" />
     <ClCompile Include="src\CORE\victor.cpp" />
     <ClCompile Include="src\GUI\gui.cpp" />
     <ClCompile Include="src\GUI\Object.cpp" />
@@ -285,6 +286,7 @@
     <ClInclude Include="src\CORE\libs\minitrace.h" />
     <ClInclude Include="src\CORE\libs\utils.h" />
     <ClInclude Include="src\CORE\midi.h" />
+    <ClInclude Include="src\CORE\ObjectManager.h" />
     <ClInclude Include="src\CORE\victor.h" />
     <ClInclude Include="src\GUI\gui.h" />
     <ClInclude Include="src\GUI\Object.h" />
@@ -445,6 +447,8 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(_ZVcpkgCurrentInstalledDir)include;src\GUI;src\CORE;src\APP;libs\imgui;libs\SDL\include;libs\SDL_image\include</AdditionalIncludeDirectories>
       <LanguageStandard_C>Default</LanguageStandard_C>
+      <DisableSpecificWarnings></DisableSpecificWarnings>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

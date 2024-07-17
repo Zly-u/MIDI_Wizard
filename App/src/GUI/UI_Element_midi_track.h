@@ -1,4 +1,4 @@
-﻿#pragma once
+﻿	#pragma once
 
 #include <memory>
 
@@ -9,6 +9,11 @@ struct Track;
 
 class UI_Element_midi_track : public Object {
 public:
+	// UI_Element_midi_track() :
+	// 	Object(0, 32, 100, 32),
+	// 	track_id(0)
+	// {}
+	
 	UI_Element_midi_track(
 		const std::shared_ptr<Track>& track,
 		float new_width, float new_height,

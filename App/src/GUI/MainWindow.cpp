@@ -16,7 +16,7 @@ struct WindowSettings
 	);
 
 	ImGuiConfigFlags ConfigFlags = ImGuiConfigFlags_None
-		| ImGuiConfigFlags_NavEnableKeyboard		// Enable Keyboard Controls
+		| ImGuiConfigFlags_NavEnableKeyboard	// Enable Keyboard Controls
 		| ImGuiConfigFlags_DockingEnable        // Enable Docking
 		| ImGuiConfigFlags_ViewportsEnable      // Enable Multi-Viewport / Platform Windows
 	// | ImGuiConfigFlags_ViewportsNoTaskBarIcons;
@@ -44,9 +44,9 @@ int MainWindow::WindowSetup_Impl(){
 	}
 
 	// From 2.0.18: Enable native IME.
-	#ifdef SDL_HINT_IME_SHOW_UI
+#ifdef SDL_HINT_IME_SHOW_UI
 	SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
-	#endif
+#endif
 
 	// Create window with SDL_Renderer graphics context
 	constexpr SDL_WindowFlags window_flags = static_cast<SDL_WindowFlags>(

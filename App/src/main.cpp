@@ -3,6 +3,7 @@
 #include "MainWindow.h"
 #include "gui.h"
 #include "midi.h"
+#include "ObjectManager.h"
 
 
 int wmain(int /*argc*/, wchar_t** /*argv*/){
@@ -52,6 +53,7 @@ int wmain(int /*argc*/, wchar_t** /*argv*/){
         }
 
     	GUI::Update();
+    	ObjectManager::Update(1.f/60.f);
     	
     	// Start the ImGui frame
 		ImGui_ImplSDLRenderer2_NewFrame();

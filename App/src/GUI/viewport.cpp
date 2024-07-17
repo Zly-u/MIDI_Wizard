@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "midi.h"
+#include "ObjectManager.h"
 #include "SDL_image.h"
 #include "SDL_render.h"
 #include "UI_Element_midi_note.h"
@@ -41,32 +42,34 @@ viewport::~viewport() {
 
 
 void viewport::OnStart() {
-	const std::shared_ptr<Object> note = std::make_shared<UI_Element_midi_note>(50, 50);
-	note->SetRenderer(main_renderer);
-	objects.push_back(note);
+	// const std::shared_ptr<Object> note;
+	// note->SetRenderer(main_renderer);
 }
 
+// TODO: Adapt this part with ObjectManager::Create<T>();
 void viewport::UpdateMIDI() {
 	if(MIDI::parsed_midi.tracks.size() == 0) { return; }
 
-	tracks.clear();
+	ObjectManager::ClearTracks();
 	
-	const float track_height = height/(MIDI::parsed_midi.tracks.size());
-	const float color_step = 360.f/(MIDI::parsed_midi.tracks.size());
-	int8_t track_index = 0;
+	const float track_height = height/MIDI::parsed_midi.tracks.size();
+	const float color_step   = 360.f/MIDI::parsed_midi.tracks.size();
+	int8_t      track_index  = 0;
 	
 	for(std::shared_ptr<Track>& midi_track : MIDI::parsed_midi.tracks) {
 		debug::printf("Track: %s\n", midi_track->name.c_str());
 		
-		const std::shared_ptr<Object> new_track = std::make_shared<UI_Element_midi_track>(
+		// const std::shared_ptr<Object> new_track = std::make_shared<UI_Element_midi_track>(
+		const std::shared_ptr<Object> new_track = ObjectManager::Create<UI_Element_midi_track>(
 			midi_track, width, track_height, track_index 
 		);
 		new_track->SetRenderer(main_renderer);
-
+	
 		SDL_Color new_color = utils::HSL2RGB(color_step * track_index, 0.8f, 0.7f);
 		new_track->SetColor(new_color);
+
+		ObjectManager::GetTracks().emplace_back(new_track);
 		
-		tracks.push_back(new_track);
 		track_index++;
 	}
 }
@@ -74,12 +77,7 @@ void viewport::UpdateMIDI() {
 //----------------------------------------------------------------------------------------------------------------------
 
 void viewport::Update(float dt) {
-	for(const auto& obj : objects) {
-		obj->Update(dt);
-	}
-	for(const auto& track : tracks) {
-		track->Update(dt);
-	}
+	
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -108,12 +106,7 @@ void viewport::SDL_Draw() {
 		&rect
 	);
 	
-	for(const auto& obj : objects) {
-		obj->Draw();
-	}
-	for(const auto& track : tracks) {
-		track->Draw();
-	}
+	ObjectManager::Draw();
 }
 
 void viewport::SDL_PostDraw() {

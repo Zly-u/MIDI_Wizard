@@ -42,9 +42,6 @@ public:
 ////////////////////////////////////////////////////////
 	
 public:
-	std::vector<std::shared_ptr<Object>> objects;
-	std::vector<std::shared_ptr<Object>> tracks;
-	
 	int width  = -1;
 	int height = -1;
 
