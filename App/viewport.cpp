@@ -121,17 +121,15 @@ void viewport::SDL_PostDraw() {
 //----------------------------------------------------------------------------------------------------------------------
 
 void viewport::DrawWindow() {
+	constexpr ImGuiWindowFlags MIDI_UI_FLAGS = ImGuiWindowFlags_None
+		| ImGuiWindowFlags_NoCollapse
+	;
+
 	static bool MIDI_UI_OPEN = true;
-	constexpr ImGuiWindowFlags MIDI_UI_FLAGS =
-		ImGuiWindowFlags_NoCollapse;
-	
-	if(MIDI_UI_OPEN) {
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-	}
-	
-	if(ImGui::Begin("MIDI Viewport", &MIDI_UI_OPEN, MIDI_UI_FLAGS))
+	if(MIDI_UI_OPEN)
 	{
-		
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+		ImGui::Begin("MIDI Viewport", &MIDI_UI_OPEN, MIDI_UI_FLAGS);
 		window_parent = ImGui::GetCurrentWindow();
 		
 		ImGui::Image(
@@ -141,9 +139,7 @@ void viewport::DrawWindow() {
 				ImGui::GetCurrentWindow()->Size.y - ImGui::GetCurrentWindow()->TitleBarHeight
 			)
 		);
-	} ImGui::End(); /* END Window MIDI Viewport */
-	
-	if(MIDI_UI_OPEN) {
+		ImGui::End();
 		ImGui::PopStyleVar();
 	}
 }
