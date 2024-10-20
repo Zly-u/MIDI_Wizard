@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "midi_track.h"
+#include "MidiTrack.h"
 #include "Object.h"
 
 class ObjectManager {
@@ -28,14 +28,14 @@ public:
 	
 	template<class T, typename ...Args>
 	static std::shared_ptr<T> Create(Args... p) {
-		if(std::is_base_of_v<Object, T> == false) {
+		if(!std::is_base_of_v<Object, T>) {
 			assert(false && "The passed class is not deriveted from Object");
 		}
 
 		std::shared_ptr<T> new_object = std::make_shared<T>(p...);
 
 		ObjectsVector* objects;
-		if(std::is_base_of_v<midi_track, T>) {
+		if(std::is_base_of_v<MidiTrack, T>) {
 			objects = &GetTracks();
 		} else {
 			objects = &GetObjects();
@@ -59,11 +59,11 @@ public:
 
 	
 	static void ClearTracks() { Get().ClearTracks_Impl(); }
-	static void Update(float dt) { Get().Update_Impl(dt); }
+	static void Update(const float dt) { Get().Update_Impl(dt); }
 	static void Draw() { Get().Draw_Impl(); }
 
 	void ClearTracks_Impl();
-	void Update_Impl(float dt);
+	void Update_Impl(const float dt);
 	void Draw_Impl();
 
 	static ObjectsVector& GetObjects() { return Get().m_objects; }

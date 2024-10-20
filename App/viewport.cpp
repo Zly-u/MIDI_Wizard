@@ -5,6 +5,7 @@
 #include "SDL_image.h"
 
 #include "UI_Element_midi_track.h"
+#include "Core/MidiParser.h"
 #include "Core/ObjectManager.h"
 #include "libs/utils.h"
 
@@ -43,30 +44,29 @@ void viewport::OnStart() {
 
 // TODO: Adapt this part with ObjectManager::Create<T>();
 void viewport::UpdateMIDI() {
-	if(MIDI::parsed_midi.tracks.size() == 0) { return; }
+	if(MidiParser::parsed_midi.tracks.empty()) { return; }
 
 	ObjectManager::ClearTracks();
 	
-	const float track_height = height/MIDI::parsed_midi.tracks.size();
-	const float color_step   = 360.f/MIDI::parsed_midi.tracks.size();
+	const float track_height = height/MidiParser::parsed_midi.tracks.size();
+	const float color_step   = 360.f/MidiParser::parsed_midi.tracks.size();
 	int8_t      track_index  = 0;
-	
-	// for(std::shared_ptr<Track>& midi_track : MIDI::parsed_midi.tracks) {
-	// 	debug::printf("Track: %s\n", midi_track->name.c_str());
-	//
-	// 	// const std::shared_ptr<Object> new_track = std::make_shared<UI_Element_midi_track>(
-	// 	const std::shared_ptr<Object> new_track = ObjectManager::Create<UI_Element_midi_track>(
-	// 		midi_track, width, track_height, track_index
-	// 	);
-	// 	new_track->SetRenderer(main_renderer);
-	//
-	// 	SDL_Color new_color = utils::HSL2RGB(color_step * track_index, 0.8f, 0.7f);
-	// 	new_track->SetColor(new_color);
-	//
-	// 	ObjectManager::GetTracks().emplace_back(new_track);
-	//
-	// 	track_index++;
-	// }
+
+	for(std::shared_ptr<Track>& midi_track : MidiParser::parsed_midi.tracks) {
+		debug::printf("Track: %s\n", midi_track->name.c_str());
+
+		const std::shared_ptr<Object> new_track = ObjectManager::Create<UI_Element_midi_track>(
+			midi_track, (float)width, track_height, track_index
+		);
+		new_track->SetRenderer(main_renderer);
+
+        const SDL_Color new_color = utils::HSL2RGB(color_step * track_index, 0.8f, 0.7f);
+		new_track->SetColor(new_color);
+
+		ObjectManager::GetTracks().emplace_back(new_track);
+
+		track_index++;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ void viewport::SDL_PostDraw() {
 //----------------------------------------------------------------------------------------------------------------------
 
 void viewport::DrawWindow() {
-	bool MIDI_UI_OPEN = true;
+	static bool MIDI_UI_OPEN = true;
 	constexpr ImGuiWindowFlags MIDI_UI_FLAGS =
 		ImGuiWindowFlags_NoCollapse;
 	

@@ -6,7 +6,7 @@ void Object::UpdateEvents() {
 	
 }
 
-void Object::Update(float dt) {
+void Object::Update(const float dt) {
 	m_time += dt;
 	
 }

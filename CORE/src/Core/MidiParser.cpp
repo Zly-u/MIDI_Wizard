@@ -1,4 +1,4 @@
-﻿#include "midi.h"
+﻿#include "MidiParser.h"
 
 #include <algorithm>
 #include <cassert>
@@ -9,6 +9,7 @@
 #include <mutex>
 #include <ranges>
 #include <print>
+#include <string>
 
 #include "core_globals.h"
 #include "helpers.h"
@@ -80,17 +81,15 @@ uint64_t parse_vlv(std::ifstream& file) {
 
 
 	
-midi MIDI::parsed_midi = midi();
-std::mutex MIDI::g_track_write_mutex = std::mutex();
+midi MidiParser::parsed_midi = midi();
+std::mutex MidiParser::g_track_write_mutex = std::mutex();
 
-void MIDI::worker_TrackRead(const std::stop_token& stop_token, char* file_path, uint8_t track_index) {
+void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar_t* file_path, const uint8_t track_index) {
 	#ifdef MTR_ENABLED
 	char thread_name[30];
 	(void)sprintf_s(thread_name, "Track Thread %i", track_index);
 	MTR_META_THREAD_NAME(thread_name);
 	#endif
-	
-	// uint64_t read_pos = 0;
 	
 	std::ifstream midi_file(file_path, std::ifstream::binary);
 	if(!midi_file.good()) {
@@ -497,12 +496,12 @@ void MIDI::worker_TrackRead(const std::stop_token& stop_token, char* file_path, 
 	debug::printf("Track %s is Done loading! Waiting for mutex.\n\n", new_track->name.c_str());
 	// MTR_SCOPE("Track Read", "MUTEX UNLOCK");
 	std::lock_guard guard(g_track_write_mutex);
-	MIDI::parsed_midi.tracks.emplace_back(new_track);
+	parsed_midi.tracks.emplace_back(new_track);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool MIDI::Read(char* file_path) {
+bool MidiParser::Read(wchar_t* file_path) {
 	// mtr_init("trace.json");
 	// MTR_META_PROCESS_NAME("MIDI Read");
 	// MTR_META_THREAD_NAME("[MIDI Read] Main Thread");
@@ -543,9 +542,9 @@ bool MIDI::Read(char* file_path) {
 	debug::printf("Parsing: %s\n", file_path);
 	
 	uint16_t     offset   = 0;
-	const size_t path_len = strlen(file_path);
+	const size_t path_len = wcslen(file_path);
 	while(offset < path_len) {
-		const char symbol = file_path[path_len-offset];
+		const wchar_t symbol = file_path[path_len-offset];
 		if(symbol == '/') {
 			offset--;
 			break;
@@ -553,14 +552,14 @@ bool MIDI::Read(char* file_path) {
 		offset++;
 	}
 
-	char* found_file_name = file_path+(path_len-offset);
+	wchar_t* found_file_name = file_path+(path_len-offset);
 	
 	debug::printf("File name: %s\n", found_file_name);
 
 	////////////////////////
 	
 	MIDI_ParsedData midi_header;
-	MIDI::parsed_midi.name = found_file_name;
+	parsed_midi.name = found_file_name;
 	
 	//////////////////////////////////////////
 	////            HEADER PART           ////
@@ -583,8 +582,7 @@ bool MIDI::Read(char* file_path) {
 			debug::printf("The file is not a midi.\n");
 			return false;
 		}
-		debug::printf("Is a MIDI file.");
-	
+
 		//////////////////////////////////////////
 
 		// Get header chunk size
@@ -630,11 +628,11 @@ bool MIDI::Read(char* file_path) {
 
 	debug::printf("\n=======================\nTracks\n=======================\n\n");
 	
-	MIDI::parsed_midi.name = found_file_name;
+	parsed_midi.name = found_file_name;
 	{
 		std::vector<std::unique_ptr<std::jthread>> threads;
 		
-		for(size_t track_index = 0; track_index < midi_header.number_of_tracks; ++track_index) {
+		for(uint8_t track_index = 0; track_index < midi_header.number_of_tracks; ++track_index) {
 			threads.push_back(std::make_unique<std::jthread>(
 				worker_TrackRead,
 				file_path, track_index

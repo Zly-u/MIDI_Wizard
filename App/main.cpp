@@ -3,7 +3,7 @@
 #include "MainWindow.h"
 #include "gui.h"
 #include "Core/ObjectManager.h"
-#include "Core/midi.h"
+#include "Core/MidiParser.h"
 #include "imgui_impl_sdl2.h"
 #include "SDL_events.h"
 
@@ -19,11 +19,12 @@ int wmain(int /*argc*/, wchar_t** /*argv*/){
 
 	// char test_mid[] = "res/Pi.mid"; // black midi stress test :)
 	
-	char test_mid[] = "res/Scatman's-World.mid";
-	// char test_mid[] = "res/test_type1_MultiTrack_names.mid";
-	// char test_mid[] = "res/SEMBELLO.Maniac.mid";
-	// char test_mid[] = "res/test_type0_spaced_CH2.MID";
-	MIDI::Read(test_mid);
+	wchar_t test_mid[] =
+	    L"res/Scatman's-World.mid";
+	    // L"res/test_type1_MultiTrack_names.mid";
+	    // L"res/SEMBELLO.Maniac.mid";
+	    // L"res/test_type0_spaced_CH2.MID";
+	MidiParser::Read(test_mid);
 	GUI::UpdateMIDI();
 	
     // Main loop

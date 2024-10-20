@@ -19,7 +19,7 @@ public:
 public:
 	// Updates User Input
 	virtual void UpdateEvents();
-	virtual void Update(float dt);
+	virtual void Update(const float dt);
 	virtual void Draw();
 	
 public:

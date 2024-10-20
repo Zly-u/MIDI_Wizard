@@ -10,7 +10,7 @@ void ObjectManager::ClearTracks_Impl() {
 }
 
 
-void ObjectManager::Update_Impl(float dt) {
+void ObjectManager::Update_Impl(const float dt) {
 	for(std::weak_ptr<Object> track : m_tracks) {
 		if(track.expired()) { continue; }
 		track.lock()->Update(dt);
