@@ -16,14 +16,13 @@ int wmain(int /*argc*/, wchar_t** /*argv*/){
 	GUI::Init(MainWindow::Get_SDLRenderer());
 	
 	constexpr ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
-	// char test_mid[] = "res/Pi.mid"; // black midi stress test :)
 	
 	wchar_t test_mid[] =
 	    L"res/Scatman's-World.mid";
 	    // L"res/test_type1_MultiTrack_names.mid";
 	    // L"res/SEMBELLO.Maniac.mid";
 	    // L"res/test_type0_spaced_CH2.MID";
+		// L"res/Pi.mid";
 	MidiParser::Read(test_mid);
 	GUI::UpdateMIDI();
 	
@@ -81,7 +80,7 @@ int wmain(int /*argc*/, wchar_t** /*argv*/){
     		static_cast<Uint8>(clear_color.w * 255)
     	);
     	SDL_RenderClear(MainWindow::Get_SDLRenderer());
-    	ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
+    	ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), MainWindow::Get_SDLRenderer());
 
     	// Display all drawn contents from the backbuffer
     	SDL_RenderPresent(MainWindow::Get_SDLRenderer());

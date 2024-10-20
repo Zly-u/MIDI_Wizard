@@ -1,4 +1,8 @@
-﻿#include "viewport.h"
+﻿#define _CRT_SECURE_NO_WARNINGS
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+#include "viewport.h"
 
 #include <cassert>
 
@@ -131,10 +135,10 @@ void viewport::DrawWindow() {
 		window_parent = ImGui::GetCurrentWindow();
 		
 		ImGui::Image(
-			viewport_tex_ptr,
+			(ImTextureID)(intptr_t)viewport_tex_ptr,
 			ImVec2(
 				ImGui::GetCurrentWindow()->Size.x,
-				ImGui::GetCurrentWindow()->Size.y - ImGui::GetCurrentWindow()->TitleBarHeight()
+				ImGui::GetCurrentWindow()->Size.y - ImGui::GetCurrentWindow()->TitleBarHeight
 			)
 		);
 	} ImGui::End(); /* END Window MIDI Viewport */

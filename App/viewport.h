@@ -31,7 +31,7 @@ public:
 		window_parent = _win;
 		current_window_size = ImVec2(
 			window_parent->Size.x,
-			window_parent->Size.y - ImGui::GetCurrentWindow()->TitleBarHeight()
+			window_parent->Size.y - ImGui::GetCurrentWindow()->TitleBarHeight
 		);
 	}
 	
