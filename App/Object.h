@@ -9,7 +9,8 @@ class Object {
 public:
 	Object(){};
 	
-	Object(float _x, float _y, float w, float h) :
+	Object(SDL_Renderer* new_renderer, float _x, float _y, float w, float h) :
+		m_renderer(new_renderer),
 		m_rect((int)_x, (int)_y, (int)w, (int)h),
 		m_init_rect(m_rect)
 	{}
@@ -19,11 +20,12 @@ public:
 public:
 	// Updates User Input
 	virtual void UpdateEvents();
-	virtual void Update(const float dt);
+	virtual void Update(float dt);
 	virtual void Draw();
 	
 public:
-	void SetPos(const float inX, const float inY);
+	void SetPos(float inX, float inY);
+	void SetSize(float inW, float inH);
 
 	void SetRenderer(SDL_Renderer* renderer) {
 		m_renderer = renderer;
@@ -39,7 +41,7 @@ public:
 		return m_color;
 	}
 	
-	void SetSizeRef(ImVec2* SizeRef){ size_mult = SizeRef; }
+	void SetScaleRef(ImVec2* SizeRef){ size_mult = SizeRef; }
 	
 	constexpr SDL_Rect* GetShape() { return &m_rect; }
 	
@@ -61,5 +63,6 @@ protected:
 	SDL_Rect m_init_rect;
 	SDL_Color m_color{0, 150, 250, 255};
 
+    // NOTE: Will be used for global viewport scaling related things
 	ImVec2* size_mult = nullptr;
 };

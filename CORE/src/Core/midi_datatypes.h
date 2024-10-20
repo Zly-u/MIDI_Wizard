@@ -72,6 +72,7 @@ struct midi {
     std::wstring name;
     std::string time_signature = "4/4";
     uint16_t bpm = 0;
+	uint64_t length = 0;
 
     std::vector<std::shared_ptr<Track>> tracks;
 

@@ -2,7 +2,7 @@
 
 #include "MainWindow.h"
 #include "gui.h"
-#include "Core/ObjectManager.h"
+#include "ObjectManager.h"
 #include "Core/MidiParser.h"
 #include "imgui_impl_sdl2.h"
 #include "SDL_events.h"

@@ -26,6 +26,12 @@ void Object::SetPos(const float inX, const float inY) {
 	m_rect.y = (int)inY;
 }
 
+void Object::SetSize(float inW, float inH) {
+    m_rect.w = inW;
+    m_rect.h = inH;
+    m_init_rect = m_rect;
+}
+
 
 
 

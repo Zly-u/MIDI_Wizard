@@ -11,7 +11,7 @@
 #include <print>
 #include <string>
 
-#include "core_globals.h"
+#include "midi_globals.h"
 #include "helpers.h"
 
 
@@ -106,7 +106,6 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 	char     track_chunk_ID[5];
 	uint32_t track_chunk_size = 0;
 	uint64_t absolute_time = 0;
-	uint64_t delta_time;
 	uint8_t  event;
 	uint8_t	 currently_skipped_track = 0;
 
@@ -147,8 +146,8 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 		// MTR_SCOPE("Track Read", "EVENT VECTORS RESERVE");
 		// Reseves vector sizes to the approximate size for the midi.
 		const uint64_t to_reserve = track_chunk_size/5;
-		new_track->events[globals::event_names.at(0x80)].reserve(to_reserve);
-		new_track->events[globals::event_names.at(0x90)].reserve(to_reserve);
+		new_track->events[globals::midi::event_names_by_code.at(0x80)].reserve(to_reserve);
+		new_track->events[globals::midi::event_names_by_code.at(0x90)].reserve(to_reserve);
 	}
 	
 	// Start Events reading loop
@@ -159,9 +158,8 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 			return;
 		}
 		
-		delta_time = parse_vlv(midi_file);
-
-		absolute_time += delta_time;
+		absolute_time += parse_vlv(midi_file);
+		parsed_midi.length = absolute_time;
 
 		// Get event
 		midi_file.read(reinterpret_cast<char*>(&event), sizeof(char));
@@ -173,7 +171,7 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 			
 			std::shared_ptr<MetaEvent> new_meta_event = std::make_shared<MetaEvent>();
 			new_meta_event->type = meta_event_type;
-			new_meta_event->name = globals::meta_event_names.at(meta_event_type);
+			new_meta_event->name = globals::midi::meta_event_names.at(meta_event_type);
 			new_meta_event->time = absolute_time;
 			
 			switch(meta_event_type) {
@@ -313,10 +311,10 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 			
 			std::shared_ptr<MIDI_Event> new_event = std::make_shared<MIDI_Event>();
 			new_event->type    = event;
-			new_event->name    = globals::event_names.at(event & 0xF0);
+			new_event->name    = globals::midi::event_names_by_code.at(event & 0xF0);
 			new_event->time    = absolute_time;
 			new_event->channel = event & 0x0F; // Channel: [0-15]
-			
+
 			switch(event & 0xF0) {
 				case 0x80: { // Note OFF
 					// MTR_SCOPE("MIDI Events", "Note OFF");
@@ -328,7 +326,7 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 					
 					new_event->value1 = note;
 					new_event->value2 = vel;
-					
+
 					break;
 				}
 				////////////////////////////////////////////////////////////////////////////////////////////////
@@ -356,7 +354,7 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 
 					new_event->value1 = note;
 					new_event->value2 = amount;
-					
+
 					break;
 				}
 				////////////////////////////////////////////////////////////////////////////////////////////////
@@ -666,7 +664,7 @@ bool MidiParser::Read(wchar_t* file_path) {
 	// 		// 	track->meta_events["Set Tempo"][0]->value1,
 	// 		// 	midi_header.time_division
 	// 		// );
-	// 		debug::print("\tHas note {} at {}", globals::note_names[note->value1 % 12], note->time);
+	// 		debug::print("\tHas note {} at {}", globals::midi::note_names[note->value1 % 12], note->time);
 	// 	}
 	// }
 	#endif
