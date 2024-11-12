@@ -11,6 +11,10 @@
 
 #include "viewport.h"
 
+#if MTR_ENABLED
+	#include "minitrace.h"
+#endif
+
 
 
 void GUI::Init_Impl(SDL_Renderer* renderer) {
@@ -21,8 +25,8 @@ void GUI::Init_Impl(SDL_Renderer* renderer) {
 	// ImGui::StyleColorsLight();
 }
 
-void GUI::UpdateMIDI_Impl() {
-	midi_viewport->UpdateMIDI();
+void GUI::GenerateMIDI_Impl() {
+	midi_viewport->GenerateMIDI();
 }
 
 void GUI::SetupDocking_Impl() {
@@ -139,6 +143,7 @@ void GUI::Update_Impl() {
 
 void GUI::Draw_Impl()
 {
+	MTR_SCOPE("GUI", "Draw_Impl");
 	SetupDocking_Impl();
 
 	// ImGUI part

@@ -30,8 +30,8 @@ class MidiTrack {
 
     public:
         MidiTrack(
-            const std::weak_ptr<Track>& new_midi_track_data,
-            const uint8_t               track_id
+            Track* new_midi_track_data,
+            const uint8_t track_id
         ) :
             track_id(track_id),
             m_data_midi_track(new_midi_track_data)
@@ -89,6 +89,6 @@ class MidiTrack {
 
 
     private:
-        std::shared_ptr<Track> m_data_midi_track;
+        Track* m_data_midi_track;
 
 };

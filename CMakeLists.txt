@@ -1,6 +1,9 @@
 ﻿cmake_minimum_required(VERSION 3.29)
 
-set(PROJECT_NAME MIDI_Wizard)
+set(
+    PROJECT_NAME MIDI_Wizard
+    CACHE INTERNAL ""
+)
 
 set(CMAKE_CXX_STANDARD 23)
 

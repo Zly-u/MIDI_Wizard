@@ -23,6 +23,13 @@ endforeach()
 
 ################################################################
 
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    target_compile_definitions(${SUB_PROJECT_NAME} PRIVATE _DEBUG=1)
+    target_compile_definitions(${SUB_PROJECT_NAME} PRIVATE MTR_ENABLED=1)
+endif()
+
+################################################################
+
 #include files from CORE project
 foreach(dir IN LISTS G_CORE_INCLUDE_DIRS)
     include_directories(${dir})

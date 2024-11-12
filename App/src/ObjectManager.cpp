@@ -2,6 +2,10 @@
 
 #include "ObjectManager.h"
 
+#if MTR_ENABLED
+	#include "minitrace.h"
+#endif
+
 class UI_Element_midi_note;
 
 
@@ -11,26 +15,24 @@ void ObjectManager::ClearTracks_Impl() {
 
 
 void ObjectManager::Update_Impl(const float dt) {
-	for(std::weak_ptr<Object> track : m_tracks) {
-		if(track.expired()) { continue; }
-		track.lock()->Update(dt);
+	for(auto& track : m_tracks) {
+		track.Update(dt);
 	}
 	
-	for(std::weak_ptr<Object> obj : m_objects) {
-		if(obj.expired()) { continue; }
-		obj.lock()->Update(dt);
+	for(auto& obj : m_objects) {
+		obj.Update(dt);
 	}
 }
 
 
 void ObjectManager::Draw_Impl() {
-	for(std::weak_ptr<Object> track : m_tracks) {
-		if(track.expired()) { continue; }
-		track.lock()->Draw();
+	MTR_SCOPE("ObjectManager", "Draw_Impl");
+
+	for(auto& track : m_tracks) {
+		track.Draw();
 	}
 
-	for(std::weak_ptr<Object> obj : m_objects) {
-		if(obj.expired()) { continue; }
-		obj.lock()->Draw();
+	for(auto& obj : m_objects) {
+		obj.Draw();
 	}
 }

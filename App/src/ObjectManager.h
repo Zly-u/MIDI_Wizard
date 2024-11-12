@@ -11,18 +11,16 @@ class UI_Element_midi_track;
 
 class ObjectManager : Singleton<ObjectManager> {
 public:
-	using SharedObj = std::shared_ptr<Object>;
+	// using SharedObj = std::shared_ptr<Object>;
+	using SharedObj = Object;
 	using ObjectsVector = std::vector<SharedObj>;
-
 	
 public:
 	template<class T, typename ...Args>
-	static std::shared_ptr<T> Create(Args... p) {
+	static SharedObj& Create(Args... p) {
 		if(!std::is_base_of_v<Object, T>) {
 			assert(false && "The passed class is not deriveted from Object");
 		}
-
-		std::shared_ptr<T> new_object = std::make_shared<T>(p...);
 
 		ObjectsVector* objects;
 		if(std::is_base_of_v<UI_Element_midi_track, T>) {
@@ -31,25 +29,12 @@ public:
 			objects = &GetObjects();
 		}
 
-		bool bHasEmplaced = false;
-		for(auto It = objects->begin(); It != objects->end(); ++It) {
-			std::weak_ptr obj = *It;
-			if(!obj.expired()) { continue; }
-
-			*It = new_object;
-			bHasEmplaced = true;
-			break;
-		}
-		if(!bHasEmplaced) {
-			objects->emplace_back(new_object);
-		}
-
-		return new_object;
+		return objects->emplace_back(T(p...));
 	}
 
 
-	static void Update(const float dt) { Get().Update_Impl(dt); }
-	static void Draw() { Get().Draw_Impl(); }
+	static void Update(const float dt)	{ Get().Update_Impl(dt); }
+	static void Draw()					{ Get().Draw_Impl(); }
 
 
 	void Update_Impl(float dt);

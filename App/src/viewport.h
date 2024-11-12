@@ -16,7 +16,7 @@ public:
 	// Made pre and post for ease of coding graphics
 	void SDL_PreDraw();
 	void OnStart();
-	void UpdateMIDI();
+	void GenerateMIDI();
 	void Update(float dt);
 	void SDL_Draw();
 	void SDL_PostDraw();

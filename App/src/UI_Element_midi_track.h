@@ -16,12 +16,12 @@ public:
 	
 	UI_Element_midi_track(
 		SDL_Renderer* new_renderer,
-		const std::weak_ptr<Track>& track,
+		Track* track,
 		const float new_width, const float new_height,
 		const uint8_t new_track_id
 	) :
 		Object(new_renderer, 0, new_height * new_track_id, new_width, new_height),
-		midi_track_data(std::make_shared<MidiTrack>(track, new_track_id))
+		midi_track_data(new MidiTrack(track, new_track_id))
 	{
 		const auto& NotesPitchRange  = midi_track_data->NotesPitchRange;
 		const auto& notes  = midi_track_data->GetNotes();
@@ -39,13 +39,13 @@ public:
 
 			const float note_length = math::InvLerp<uint64_t>(0, MidiParser::parsed_midi.length, note.length) * float(GetShape()->w);
 
-			const std::shared_ptr<Object> new_note = ObjectManager::Create<UI_Element_midi_note>(
+			Object& new_note = ObjectManager::Create<UI_Element_midi_note>(
 				GetRenderer(),
 				posX_on_track,
 				float(GetShape()->y + GetShape()->h/2.f) - posY_on_track,
 				std::max(note_length, 1.f), std::min(std::max(note_h, 1.f), float(GetShape()->h) / 20.f)
 			);
-			new_note->SetColor(utils::HSL2RGB(0.f, 0.8f, 0.0f));
+			new_note.SetColor(utils::HSL2RGB(0.f, 0.8f, 0.0f));
 		}
 	}
 
@@ -54,5 +54,5 @@ protected:
 	void Draw() override;
 
 private:
-	std::shared_ptr<MidiTrack> midi_track_data;
+	MidiTrack* midi_track_data;
 };

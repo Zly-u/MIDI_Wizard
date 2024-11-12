@@ -11,6 +11,18 @@ target_include_directories(${SUB_PROJECT_NAME} PUBLIC libs)
 
 ################################################################
 
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    target_compile_definitions(${SUB_PROJECT_NAME} PRIVATE _DEBUG=1)
+    target_compile_definitions(${SUB_PROJECT_NAME} PRIVATE MTR_ENABLED=1)
+else()
+    list(
+        REMOVE_ITEM ${SOURCES}
+        minitrace.*
+    )
+endif()
+
+################################################################
+
 set(
     G_CORE_INCLUDE_DIRS
 

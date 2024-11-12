@@ -13,6 +13,10 @@
 #include "ObjectManager.h"
 #include "libs/utils.h"
 
+#if MTR_ENABLED
+	#include "minitrace.h"
+#endif
+
 
 viewport::viewport(SDL_Renderer* renderer)
 	: width(1280), height(720),
@@ -46,13 +50,13 @@ void viewport::OnStart() {
 	// note->SetRenderer(main_renderer);
 }
 
-void viewport::UpdateMIDI() {
+void viewport::GenerateMIDI() {
 	if(MidiParser::parsed_midi.tracks.empty()) { return; }
 
 	ObjectManager::ClearTracks();
 	
-	const float track_height = height/MidiParser::parsed_midi.tracks.size();
-	const float color_step   = 360.f/MidiParser::parsed_midi.tracks.size();
+	const float track_height = (float)height/(float)MidiParser::parsed_midi.tracks.size();
+	const float color_step   = 360.f/(float)MidiParser::parsed_midi.tracks.size();
 	int8_t      track_index  = 0;
 
 	for(const auto& midi_track : MidiParser::parsed_midi.tracks) {
@@ -60,7 +64,7 @@ void viewport::UpdateMIDI() {
 
 		debug::printf("Track: %s\n", midi_track->name.c_str());
 
-		const std::shared_ptr<Object> new_track = ObjectManager::Create<UI_Element_midi_track>(
+		Object& new_track = ObjectManager::Create<UI_Element_midi_track>(
 			main_renderer,
 			midi_track,
 			(float)width, track_height,
@@ -68,7 +72,7 @@ void viewport::UpdateMIDI() {
 		);
 
 		const SDL_Color new_color = utils::HSL2RGB(color_step * track_index, 0.8f, 0.7f);
-		new_track->SetColor(new_color);
+		new_track.SetColor(new_color);
 
 		track_index++;
 	}
@@ -95,6 +99,7 @@ void viewport::SDL_PreDraw() {
 }
 
 void viewport::SDL_Draw() {
+	MTR_SCOPE("Viewport", "SDL_Draw");
 	if(!main_renderer){ return; }
 	if(!viewport_tex_ptr){ return; }
 	

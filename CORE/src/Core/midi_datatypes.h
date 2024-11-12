@@ -59,12 +59,12 @@ struct Track {
 
     std::map<
         std::string,
-        std::vector<std::shared_ptr<MetaEvent>>
+        std::vector<MetaEvent*>
     > meta_events;
 
     std::map<
         std::string,
-        std::vector<std::shared_ptr<MIDI_Event>>
+        std::vector<MIDI_Event*>
     > events;
 };
 
@@ -74,7 +74,7 @@ struct midi {
     uint16_t bpm = 0;
 	uint64_t length = 0;
 
-    std::vector<std::shared_ptr<Track>> tracks;
+    std::vector<Track*> tracks;
 
     ~midi() {
         debug::printf("Parsed MIDI destructed\n");
