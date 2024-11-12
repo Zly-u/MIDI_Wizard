@@ -14,9 +14,9 @@ int wmain(int /*argc*/, wchar_t** /*argv*/){
 	}
 	
 	GUI::Init(MainWindow::Get_SDLRenderer());
-	
+
 	constexpr ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-	
+
 	wchar_t test_mid[] =
 	    L"res/Scatman's-World.mid";
 	    // L"res/test_type1_MultiTrack_names.mid";

@@ -5,14 +5,25 @@ file(GLOB_RECURSE SOURCES "*.cpp" "*.c" "*.hpp" "*.h")
 
 add_executable(${SUB_PROJECT_NAME} ${SOURCES})
 
-#include files from CORE project
-include_directories(${CMAKE_SOURCE_DIR}/CORE)
-include_directories(${CMAKE_SOURCE_DIR}/CORE/libs/imgui)
-include_directories(${CMAKE_SOURCE_DIR}/CORE/libs/SDL/include)
-include_directories(${CMAKE_SOURCE_DIR}/CORE/libs/SDL_image/include)
-include_directories(${CMAKE_SOURCE_DIR}/CORE/libs/stb)
-include_directories(${CMAKE_SOURCE_DIR}/CORE/libs/tinyfiledialogs)
+target_include_directories(${SUB_PROJECT_NAME} PUBLIC src)
 
+set(
+    G_APP_INCLUDE_DIRS
+
+    ${CMAKE_SOURCE_DIR}/APP
+    ${CMAKE_SOURCE_DIR}/APP/libs/imgui
+
+    CACHE INTERNAL ""
+)
+
+#include files from APP project
+foreach(dir IN LISTS G_APP_INCLUDE_DIRS)
+    include_directories(${dir})
+endforeach()
+
+################################################################
+
+#include files from CORE project
 foreach(dir IN LISTS G_CORE_INCLUDE_DIRS)
     include_directories(${dir})
 endforeach()

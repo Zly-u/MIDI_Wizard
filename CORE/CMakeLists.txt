@@ -15,7 +15,6 @@ set(
     G_CORE_INCLUDE_DIRS
 
     ${CMAKE_SOURCE_DIR}/CORE
-    ${CMAKE_SOURCE_DIR}/CORE/libs/imgui
     ${CMAKE_SOURCE_DIR}/CORE/libs/SDL/include
     ${CMAKE_SOURCE_DIR}/CORE/libs/SDL_image/include
     ${CMAKE_SOURCE_DIR}/CORE/libs/stb
