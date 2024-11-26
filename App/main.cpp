@@ -3,13 +3,10 @@
 #include "MainWindow.h"
 #include "gui.h"
 #include "ObjectManager.h"
-#include "Core/MidiParser.h"
 #include "imgui_impl_sdl2.h"
 #include "SDL_events.h"
 
-#if MTR_ENABLED
-	#include "minitrace.h"
-#endif
+#include "minitrace.h"
 
 int wmain(int /*argc*/, wchar_t** /*argv*/){
 	if(const int ws_result = MainWindow::WindowSetup() != 0){
@@ -20,19 +17,10 @@ int wmain(int /*argc*/, wchar_t** /*argv*/){
 
 	constexpr ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-	wchar_t test_mid[] =
-	    // L"res/Scatman's-World.mid";
-	    // L"res/test_type1_MultiTrack_names.mid";
-	    // L"res/SEMBELLO.Maniac.mid";
-	    // L"res/test_type0_spaced_CH2.MID";
-		L"res/Pi.mid";
-	MidiParser::Read(test_mid);
-	GUI::GenerateMIDI();
-
-	mtr_init("Main_Trace.json");
-	MTR_META_PROCESS_NAME("Main Loop");
-	MTR_META_THREAD_NAME("[Main Loop] Main Thread");
-	MTR_BEGIN_FUNC();
+	// mtr_init("Main_Trace.json");
+	// MTR_META_PROCESS_NAME("Main Loop");
+	// MTR_META_THREAD_NAME("[Main Loop] Main Thread");
+	// MTR_BEGIN_FUNC();
 
     // Main loop
     bool done = false;
@@ -98,8 +86,8 @@ int wmain(int /*argc*/, wchar_t** /*argv*/){
 
 	printf("\nCLEANING UP\n\n");
 
-	MTR_END_FUNC();
-	mtr_shutdown();
+	// MTR_END_FUNC();
+	// mtr_shutdown();
 
     return 0;
 }

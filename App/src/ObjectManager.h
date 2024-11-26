@@ -40,8 +40,10 @@ public:
 	void Update_Impl(float dt);
 	void Draw_Impl();
     void ClearTracks_Impl();
+	void ClearObjects_Impl();
 
-    static void ClearTracks()           { Get().ClearTracks_Impl(); }
+	static void ClearTracks()           { Get().ClearTracks_Impl(); }
+	static void ClearObjects()           { Get().ClearObjects_Impl(); }
 	static ObjectsVector& GetObjects()  { return Get().m_objects; }
 	static ObjectsVector& GetTracks()   { return Get().m_tracks; }
 

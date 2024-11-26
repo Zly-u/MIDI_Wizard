@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <SDL_render.h>
+#include <string>
 
 #include "imgui.h"
 
@@ -10,11 +11,13 @@
 #include "imgui_impl_sdlrenderer2.h"
 
 #include "viewport.h"
+#include "Core/helpers.h"
+#include "Core/MidiParser.h"
 
-#if MTR_ENABLED
-	#include "minitrace.h"
-#endif
+#include "tinyfiledialogs.h"
 
+#include "minitrace.h"
+#include "ObjectManager.h"
 
 
 void GUI::Init_Impl(SDL_Renderer* renderer) {
@@ -143,7 +146,7 @@ void GUI::Update_Impl() {
 
 void GUI::Draw_Impl()
 {
-	MTR_SCOPE("GUI", "Draw_Impl");
+	// MTR_SCOPE("GUI", "Draw_Impl");
 	SetupDocking_Impl();
 
 	// ImGUI part
@@ -241,7 +244,29 @@ void GUI::UI_ShowMenu_File_Impl()
 {
 	if (ImGui::MenuItem("New")) {}
 	
-	if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+	if (ImGui::MenuItem("Open", "Ctrl+O")) {
+		const wchar_t* formats[2] = {L"*.mid", L"*.midi"};
+		std::wstring result(
+			tinyfd_openFileDialogW(
+				L"Open a MIDI File",
+				nullptr, 2, formats,
+				L"MIDI Files (*.mid, *.midi)",
+				0
+			)
+		);
+
+		debug::printf("Path: %ls\n", result.c_str());
+
+		if (result.empty()) { return; }
+
+
+		// ObjectManager::ClearTracks();
+		// ObjectManager::ClearObjects();
+		// MidiParser::parsed_midi = midi();
+		if(MidiParser::Read(const_cast<wchar_t*>(result.c_str()))) {
+			GenerateMIDI();
+		}
+	}
 	
 	if (ImGui::BeginMenu("Open Recent"))
 	{

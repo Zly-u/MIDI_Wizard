@@ -53,8 +53,6 @@ void viewport::OnStart() {
 void viewport::GenerateMIDI() {
 	if(MidiParser::parsed_midi.tracks.empty()) { return; }
 
-	ObjectManager::ClearTracks();
-	
 	const float track_height = (float)height/(float)MidiParser::parsed_midi.tracks.size();
 	const float color_step   = 360.f/(float)MidiParser::parsed_midi.tracks.size();
 	int8_t      track_index  = 0;
@@ -99,7 +97,7 @@ void viewport::SDL_PreDraw() {
 }
 
 void viewport::SDL_Draw() {
-	MTR_SCOPE("Viewport", "SDL_Draw");
+	// MTR_SCOPE("Viewport", "SDL_Draw");
 	if(!main_renderer){ return; }
 	if(!viewport_tex_ptr){ return; }
 	

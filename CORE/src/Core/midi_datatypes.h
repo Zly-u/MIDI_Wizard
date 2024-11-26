@@ -51,6 +51,8 @@ struct Track {
     Track() = default;
     ~Track() {
         debug::printf("~Track(%s)", name.c_str());
+    	meta_events.clear();
+    	events.clear();
     }
 
     std::string name = "[PLACEHOLDER NAME]";
@@ -78,13 +80,14 @@ struct midi {
 
     ~midi() {
         debug::printf("Parsed MIDI destructed\n");
+    	tracks.clear();
     }
 };
 
 
 struct MIDI_ParsedData {
-    uint32_t header_size      = 0;
-    uint8_t  type             = 0; // 0-2
+    uint32_t header_size       = 0;
+    uint16_t  type             = 0; // 0-2
     uint16_t  number_of_tracks = 1; // 1-65535
 
     // TODO: time_division
