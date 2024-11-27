@@ -1,5 +1,6 @@
 #include "gui.h"
 
+#include <array>
 #include <memory>
 
 #include <SDL_render.h>
@@ -9,6 +10,7 @@
 
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
+#include "IniManager.h"
 
 #include "viewport.h"
 #include "Core/helpers.h"
@@ -242,6 +244,8 @@ void GUI::CleanUp_Impl() {
 
 void GUI::UI_ShowMenu_File_Impl()
 {
+	auto paths_list = IniManager::GetFile()["history"]["files"].as<std::vector<std::wstring>>();
+
 	if (ImGui::MenuItem("New")) {}
 	
 	if (ImGui::MenuItem("Open", "Ctrl+O")) {
@@ -263,18 +267,25 @@ void GUI::UI_ShowMenu_File_Impl()
 		// ObjectManager::ClearTracks();
 		// ObjectManager::ClearObjects();
 		// MidiParser::parsed_midi = midi();
+		
+		// TODO: Made the hirstory not repeat the same files in the list.
 		if(MidiParser::Read(const_cast<wchar_t*>(result.c_str()))) {
+			paths_list.insert(paths_list.begin(), result);
+			paths_list.resize(5);
+
+			IniManager::GetFile()["history"]["files"] = paths_list;
+			IniManager::SaveFile();
+
 			GenerateMIDI();
 		}
 	}
 	
 	if (ImGui::BeginMenu("Open Recent"))
 	{
-		ImGui::MenuItem("test1.mid");
-		ImGui::MenuItem("test2.mid");
-		ImGui::MenuItem("test3.mid");
-		ImGui::MenuItem("..."); // TODO: Can replace with some scroll box?
-
+		for(const std::wstring& path : paths_list) {
+			if(path.empty()){ continue; }
+			ImGui::MenuItem(std::string(path.begin(), path.end()).c_str());
+		}
 		ImGui::EndMenu(); // Open Recent
 	}
 		

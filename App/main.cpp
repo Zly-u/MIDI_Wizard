@@ -1,9 +1,11 @@
 #include <cstdio>
+#include <iostream>
 
 #include "MainWindow.h"
 #include "gui.h"
 #include "ObjectManager.h"
 #include "imgui_impl_sdl2.h"
+#include "IniManager.h"
 #include "SDL_events.h"
 
 #include "minitrace.h"
@@ -12,7 +14,9 @@ int wmain(int /*argc*/, wchar_t** /*argv*/){
 	if(const int ws_result = MainWindow::WindowSetup() != 0){
 		return ws_result;
 	}
-	
+
+	IniManager::LoadFile();
+
 	GUI::Init(MainWindow::Get_SDLRenderer());
 
 	constexpr ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);

@@ -29,4 +29,9 @@ namespace debug {
 		::printf(format);  // NOLINT(clang-diagnostic-format-security)
 		#endif
 	}
+	inline void printf(const wchar_t* format...) {
+		#ifdef _DEBUG
+		::wprintf(format);  // NOLINT(clang-diagnostic-format-security)
+		#endif
+	}
 }
