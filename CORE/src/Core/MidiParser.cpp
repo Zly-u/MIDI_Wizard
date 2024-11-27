@@ -175,10 +175,15 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 			char meta_event_type;
 			
 			midi_file.read(&meta_event_type, sizeof(char));
-			
-			MetaEvent* new_meta_event = new MetaEvent;
+
+			if(midi_header.type == 0) {
+				new_track = parsed_midi.tracks[0].get();
+			}
+
+			auto me_name = globals::midi::meta_event_names.at(meta_event_type);
+			MetaEvent* new_meta_event = new_track->meta_events[me_name].emplace_back(std::make_unique<MetaEvent>()).get();
 			new_meta_event->type = meta_event_type;
-			new_meta_event->name = globals::midi::meta_event_names.at(meta_event_type);
+			new_meta_event->name = me_name;
 			new_meta_event->time = absolute_time;
 			
 			switch(meta_event_type) {
@@ -298,9 +303,8 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 
 			// MTR_SCOPE("MIDI Events", "META EVENT SAVE");
 			if(midi_header.type == 0) {
-				new_track = parsed_midi.tracks[0];
+				new_track = parsed_midi.tracks[0].get();
 			}
-			new_track->meta_events[new_meta_event->name].push_back(new_meta_event);
 		}
 		else if ((event & 0xF0) == 0xF0) // Sys Ex events
 		{
@@ -318,16 +322,17 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 		else // MIDI events
 		{
 			// MTR_SCOPE("MIDI Events", "EVENT READ");
-			
-			MIDI_Event* new_event = new MIDI_Event;
-			new_event->type    = event;
-			new_event->name    = globals::midi::event_names_by_code.at(event & 0xF0);
-			new_event->time    = absolute_time;
-			new_event->channel = event & 0x0F; // Channel: [0-15]
 
 			if(midi_header.type == 0) {
-				new_track = parsed_midi.tracks[new_event->channel];
+				new_track = parsed_midi.tracks[event & 0x0F].get();
 			}
+
+			auto e_name = globals::midi::event_names_by_code.at(event & 0xF0);
+			MIDI_Event* new_event = new_track->events[e_name].emplace_back(std::make_unique<MIDI_Event>()).get();
+			new_event->type    = event;
+			new_event->name    = e_name;
+			new_event->time    = absolute_time;
+			new_event->channel = event & 0x0F; // Channel: [0-15]
 
 			switch(event & 0xF0) {
 				case 0x80: { // Note OFF
@@ -471,7 +476,6 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 			{
 				// MTR_SCOPE("TRACK READ", "Event Save");
 				new_track->channel = new_event->channel;
-				new_track->events[new_event->name].push_back(new_event);					
 			}
 		}
 	}
@@ -484,20 +488,20 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 	}
 	
 	// Sorting by time
-	for(auto& events : new_track->events | std::views::values) {
+	for(auto& [_, events] : new_track->events) {
 		std::ranges::sort(
 			events,
-			[](const MIDI_Event* A, const MIDI_Event* B) {
+			[](const std::shared_ptr<MIDI_Event>& A, const std::shared_ptr<MIDI_Event>& B) {
 			  return A->time < B->time;
 			}
 		);
 	}
 	
 	// Sorting by time
-	for(auto& events : new_track->meta_events | std::views::values) {
+	for(auto& [_, events] : new_track->meta_events) {
 		std::ranges::sort(
 			events,
-			[](const MetaEvent* A, const MetaEvent* B) {
+			[](const std::shared_ptr<MetaEvent>& A, std::shared_ptr<MetaEvent>& B) {
 			  return A->time < B->time;
 			}
 		);
@@ -509,7 +513,9 @@ void MidiParser::worker_TrackRead(const std::stop_token& stop_token, const wchar
 	// MTR_SCOPE("Track Read", "MUTEX UNLOCK");
 	std::lock_guard guard(g_track_write_mutex);
 	notes_count += new_track->events[globals::event_names::NoteOn].size();
-	parsed_midi.tracks.emplace_back(new_track);
+	if (midi_header.type != 0) {
+		parsed_midi.tracks.emplace_back(new_track);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -526,11 +532,11 @@ bool MidiParser::Read(wchar_t* file_path) {
 	
 	debug::printf("Parsing: %s\n", file_path);
 	
-	uint16_t     offset   = 0;
+	uint16_t offset = 0;
 	const size_t path_len = wcslen(file_path);
 	while(offset < path_len) {
 		const wchar_t symbol = file_path[path_len-offset];
-		if(symbol == '/') {
+		if(symbol == '\\' || symbol == '/') {
 			offset--;
 			break;
 		}
@@ -619,9 +625,9 @@ bool MidiParser::Read(wchar_t* file_path) {
 
 		const uint16_t number_of_tracks = (midi_header.type == 0) ? 1 : midi_header.number_of_tracks;
 		if (midi_header.type == 0) {
-			parsed_midi.tracks.resize(16, {});
-			for(auto& track : parsed_midi.tracks) {
-				track = new Track();
+			for(size_t i = 0; i < 16; i++) {
+				auto new_track = parsed_midi.tracks.emplace_back(std::make_unique<Track>());
+				new_track->name = std::string("Channel ") + std::to_string(i);
 			}
 		}
 		for(uint16_t track_index = 0; track_index < number_of_tracks; ++track_index) {
@@ -638,7 +644,7 @@ bool MidiParser::Read(wchar_t* file_path) {
 		// Remove empty tracks for auto generated channels
 		if (midi_header.type == 0) {
 			for(auto It = parsed_midi.tracks.begin(); It != parsed_midi.tracks.end();) {
-				Track* track = *It;
+				Track* track = It->get();
 
 				if(!track->events.empty()) {
 					++It;
@@ -655,6 +661,9 @@ bool MidiParser::Read(wchar_t* file_path) {
 	debug::printf("=====================\n");
 	debug::printf("The loading took %f ms\n", std::chrono::duration<double, std::milli>(t2 - t1).count());
 	debug::printf("Amount of notes: %d\n", notes_count);
+
+	debug::printf("First track ptr: %p\n", parsed_midi.tracks[0].get());
+	debug::printf("Last track ptr: %p\n", (parsed_midi.tracks.end()-1)->get());
 
 	#if _DEBUG
 	// for(auto& track : parsed_midi.tracks) {

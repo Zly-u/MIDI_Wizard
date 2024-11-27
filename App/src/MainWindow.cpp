@@ -7,8 +7,6 @@
 struct WindowSettings
 {
 	const char* Title = "MIDI Wizard";
-	int width = 1280;
-	int height = 720;
 	SDL_WindowFlags window_flags = static_cast<SDL_WindowFlags>(
 		SDL_WINDOW_RESIZABLE
 		| SDL_WINDOW_ALLOW_HIGHDPI

@@ -64,7 +64,7 @@ void viewport::GenerateMIDI() {
 
 		Object& new_track = ObjectManager::Create<UI_Element_midi_track>(
 			main_renderer,
-			midi_track,
+			midi_track.get(),
 			(float)width, track_height,
 			track_index
 		);

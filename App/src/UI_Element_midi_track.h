@@ -23,7 +23,7 @@ public:
 		Object(new_renderer, 0, new_height * new_track_id, new_width, new_height),
 		midi_track_data(new MidiTrack(track, new_track_id))
 	{
-		const auto& NotesPitchRange  = midi_track_data->NotesPitchRange;
+		const auto& NotesPitchRange = midi_track_data->NotesPitchRange;
 		const auto& notes  = midi_track_data->GetNotes();
 		const float note_h = (float)GetShape()->h/(float)(midi_track_data->NotesPitchRange.GetDifference() + 1);
 
