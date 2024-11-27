@@ -40,12 +40,14 @@ namespace ini
                     cnt = endPos - startPos;
 
                 std::string tmp = value.substr(startPos, cnt);
+            	if(tmp.empty()){continue;}
+
                 // use the conversion functor for the type contained in
                 // the vector, so the vector can use any type that
                 // is compatible with inifile-cpp
                 Convert<T> conv;
                 conv.decode(tmp, decoded);
-                result.push_back(decoded);
+            	result.push_back(decoded);
             }
         }
 

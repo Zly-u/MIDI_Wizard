@@ -634,6 +634,19 @@ bool MidiParser::Read(wchar_t* file_path) {
 		for(const auto& thread : threads) {
 			thread->join();
 		}
+
+		// Remove empty tracks for auto generated channels
+		if (midi_header.type == 0) {
+			for(auto It = parsed_midi.tracks.begin(); It != parsed_midi.tracks.end();) {
+				Track* track = *It;
+
+				if(!track->events.empty()) {
+					++It;
+				} else {
+					It = parsed_midi.tracks.erase(It);
+				}
+			}
+		}
 	}
 	const auto t2 = std::chrono::high_resolution_clock::now();
 	

@@ -242,49 +242,67 @@ void GUI::CleanUp_Impl() {
 
 /// UI ELEMENTS ///
 
+void UpdateHistory(const std::wstring& new_file, std::vector<std::wstring>& paths_list) {
+	for(size_t i = 0; i < paths_list.size(); i++) {
+		if(paths_list[i] != new_file){ continue; }
+
+		paths_list.erase(paths_list.begin() + i);
+		break;
+	}
+
+	paths_list.insert(paths_list.begin(), new_file);
+
+	paths_list.resize(5);
+
+	IniManager::GetFile()["history"]["files"] = paths_list;
+	IniManager::SaveFile();
+}
+
+void OpenMidi(const wchar_t* file_path) {
+	std::vector<std::wstring> paths_list = IniManager::GetFile()["history"]["files"].as<std::vector<std::wstring>>();
+
+	ObjectManager::ClearTracks();
+	ObjectManager::ClearObjects();
+	MidiParser::parsed_midi = midi();
+
+	if(MidiParser::Read(const_cast<wchar_t*>(file_path))) {
+		UpdateHistory(file_path, paths_list);
+		GUI::GenerateMIDI();
+	}
+}
+
 void GUI::UI_ShowMenu_File_Impl()
 {
-	auto paths_list = IniManager::GetFile()["history"]["files"].as<std::vector<std::wstring>>();
-
 	if (ImGui::MenuItem("New")) {}
 	
 	if (ImGui::MenuItem("Open", "Ctrl+O")) {
 		const wchar_t* formats[2] = {L"*.mid", L"*.midi"};
-		std::wstring result(
-			tinyfd_openFileDialogW(
-				L"Open a MIDI File",
-				nullptr, 2, formats,
-				L"MIDI Files (*.mid, *.midi)",
-				0
-			)
+
+		wchar_t* selected_file_s = tinyfd_openFileDialogW(
+			L"Open a MIDI File",
+			nullptr, 2, formats,
+			L"MIDI Files (*.mid, *.midi)",
+			0
 		);
 
-		debug::printf("Path: %ls\n", result.c_str());
-
-		if (result.empty()) { return; }
-
-
-		// ObjectManager::ClearTracks();
-		// ObjectManager::ClearObjects();
-		// MidiParser::parsed_midi = midi();
-		
-		// TODO: Made the hirstory not repeat the same files in the list.
-		if(MidiParser::Read(const_cast<wchar_t*>(result.c_str()))) {
-			paths_list.insert(paths_list.begin(), result);
-			paths_list.resize(5);
-
-			IniManager::GetFile()["history"]["files"] = paths_list;
-			IniManager::SaveFile();
-
-			GenerateMIDI();
+		if (!selected_file_s) {
+			debug::printf("Path for selected file was not found.\n");
+			return;
 		}
+
+		debug::printf("Path: %ls\n", selected_file_s);
+		OpenMidi(selected_file_s);
 	}
-	
-	if (ImGui::BeginMenu("Open Recent"))
+
+	const auto paths_list = IniManager::GetFile()["history"]["files"].as<std::vector<std::wstring>>();
+	if (ImGui::BeginMenu("Open Recent", !paths_list.empty()))
 	{
 		for(const std::wstring& path : paths_list) {
 			if(path.empty()){ continue; }
-			ImGui::MenuItem(std::string(path.begin(), path.end()).c_str());
+
+			if(ImGui::MenuItem(std::string(path.begin(), path.end()).c_str())) {
+				OpenMidi(path.c_str());
+			}
 		}
 		ImGui::EndMenu(); // Open Recent
 	}

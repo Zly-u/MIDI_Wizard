@@ -39,7 +39,7 @@ public:
 			Object& new_note = ObjectManager::Create<UI_Element_midi_note>(
 				GetRenderer(),
 				posX_on_track,
-				float(GetShape()->y + norm_note_posY * GetShape()->h),
+				float(GetShape()->y + norm_note_posY * (GetShape()->h - note_h)),
 				std::max(note_length, 1.f), std::min(std::max(note_h, 1.f), float(GetShape()->h) / 20.f)
 			);
 			new_note.SetColor(utils::HSL2RGB(0.f, 0.8f, 0.0f));
