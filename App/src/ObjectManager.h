@@ -13,7 +13,7 @@ class ObjectManager : Singleton<ObjectManager> {
 public:
 	// using SharedObj = std::shared_ptr<Object>;
 	using SharedObj = Object;
-	using ObjectsVector = std::vector<SharedObj>;
+	using ObjectsVector = std::vector<Object>;
 	
 public:
 	template<class T, typename ...Args>

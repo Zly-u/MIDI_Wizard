@@ -9,9 +9,11 @@ class UI_Element_midi_note;
 
 void ObjectManager::ClearTracks_Impl() {
 	GetTracks().clear();
+	GetTracks().resize(0);
 }
 void ObjectManager::ClearObjects_Impl() {
 	GetObjects().clear();
+	GetObjects().resize(0);
 }
 
 void ObjectManager::Update_Impl(const float dt) {

@@ -78,12 +78,12 @@ struct Track {
 
     std::map<
         std::string,
-        std::vector<std::shared_ptr<MetaEvent>>
+        std::vector<std::unique_ptr<MetaEvent>>
     > meta_events;
 
     std::map<
         std::string,
-        std::vector<std::shared_ptr<MIDI_Event>>
+        std::vector<std::unique_ptr<MIDI_Event>>
     > events;
 };
 

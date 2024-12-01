@@ -63,6 +63,6 @@ protected:
 	SDL_Rect m_init_rect;
 	SDL_Color m_color{0, 150, 250, 255};
 
-    // NOTE: Will be used for global viewport scaling related things
+    // TODO: Will be used for global viewport scaling related things
 	ImVec2* size_mult = nullptr;
 };

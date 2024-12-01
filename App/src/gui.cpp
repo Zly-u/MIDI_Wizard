@@ -273,7 +273,11 @@ void OpenMidi(const wchar_t* file_path) {
 
 void GUI::UI_ShowMenu_File_Impl()
 {
-	if (ImGui::MenuItem("New")) {}
+	if (ImGui::MenuItem("New")) {
+		ObjectManager::ClearTracks();
+		ObjectManager::ClearObjects();
+		MidiParser::parsed_midi = midi();
+	}
 	
 	if (ImGui::MenuItem("Open", "Ctrl+O")) {
 		const wchar_t* formats[2] = {L"*.mid", L"*.midi"};

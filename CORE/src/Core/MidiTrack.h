@@ -37,8 +37,8 @@ class MidiTrack {
             m_data_midi_track(new_midi_track_data)
         {
         	name           = m_data_midi_track->name;
-	        auto& NoteOns  = m_data_midi_track->events[globals::event_names::NoteOn];
-            auto& NoteOffs = m_data_midi_track->events[globals::event_names::NoteOff];
+	        auto& NoteOns  = m_data_midi_track->events[globals::midi::event_names::NoteOn];
+            auto& NoteOffs = m_data_midi_track->events[globals::midi::event_names::NoteOff];
 
             for(size_t index = 0; index < NoteOns.size(); ++index){
                 if (NotesTimeRange.Min >= NoteOns[index]->time) {
@@ -53,12 +53,12 @@ class MidiTrack {
             	}
 
                 if(NoteOffs.size() <= index) {
-                    notes.emplace_back(Note{
+                    notes.emplace_back(
                         NoteOns[index]->time,
                         100,
                         (uint8_t)NoteOns[index]->value1,
                         (uint8_t)NoteOns[index]->value2
-                    });
+                    );
                     continue;
                 }
 
@@ -66,12 +66,12 @@ class MidiTrack {
                     NotesTimeRange.Max = NoteOffs[index]->time;
                 }
 
-                notes.emplace_back(Note{
+                notes.emplace_back(
                     NoteOns[index]->time,
                     NoteOffs[index]->time - NoteOns[index]->time,
                     (uint8_t)NoteOns[index]->value1,
                     (uint8_t)NoteOns[index]->value2
-                });
+                );
             }
         }
 
